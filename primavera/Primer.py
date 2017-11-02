@@ -76,13 +76,13 @@ class Primer:
     @staticmethod
     def list_to_spreadsheet(primers_list, filepath=None):
 
-        dataframe = pandas.Dataframe.from_records(
+        dataframe = pandas.DataFrame.from_records(
             columns=['name', 'sequence'] + sorted(set(
                 field
                 for primer in primers_list
                 for field in primer.metadata
             )),
-            records=[
+            data=[
                 dict([('name', primer.name), ('sequence', primer.sequence)] +
                      list(primer.metadata.items()))
                 for primer in primers_list

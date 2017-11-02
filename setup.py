@@ -3,13 +3,14 @@ ez_setup.use_setuptools()
 
 from setuptools import setup, find_packages
 
-exec(open('dna_sequencing_viewer/version.py').read()) # loads __version__
+exec(open('primavera/version.py').read()) # loads __version__
 
-setup(name='dna_sequencing_viewer',
-      version=__version__,
-      author='Zulko',
-    description='',
+setup(
+    name='primavera',
+    version=__version__,
+    author='Zulko',
+    description='Primer selection + data analysis for DNA assembly validation',
     long_description=open('README.rst').read(),
     license='see LICENSE.txt',
-    keywords="",
+    keywords="DNA assembly sequencing primer design",
     packages= find_packages(exclude='docs'))

@@ -2,11 +2,13 @@
 
 # __all__ = []
 
-from .SequencingMatches import (SequencingMatches, SequencingRead,
-                                SequencingMatchesSet, Primer)
+from .ReadReferenceMatches import (ReadReferenceMatches, SequencingRead,
+                                   ReadReferenceMatchesSet)
+from .Primer import Primer
 from .SequencingReportGenerator import (SequencingReportGenerator,
                                         PrimersFastaSource,
                                         ConstructsFolderSource)
 from .sequencing_simulation import simulate_sequencing
-from PrimerSelector import PrimerSelector
+from .PrimerSelector import PrimerSelector
+from .biotools import annotate_record, blast_sequences, load_record
 from .version import __version__

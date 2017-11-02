@@ -6,7 +6,8 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 from flametree import file_tree
-from .SequencingMatches import SequencingRead, SequencingMatchesSet, Primer
+from .ReadReferenceMatches import SequencingRead, ReadReferenceMatches
+from .Primer import Primer
 
 
 class Source:
@@ -62,7 +63,7 @@ class SequencingReportGenerator:
         return filename.split("_")[:2]
 
     def classify_reads(self, reads):
-        """Return a dict {construct_id: [associated_reads]}"""
+        """Return a dict {construct_id: [associated_reads]}."""
         classified_reads = defaultdict(lambda *a: [])
         for read in reads:
             primer_name, construct_name = \
@@ -110,7 +111,7 @@ class SequencingReportGenerator:
                 errors.append(construct_name + " unknown")
                 continue
             linear = construct.__dict__.get('linear', self.default_linearity)
-            matches_set = SequencingMatchesSet.from_reads(
+            matches_set = ReadReferenceMatchesSet.from_reads(
                 construct, reads, perc_identity=perc_identity, linear=linear
             )
             self.plot_matches_set(matches_set, title=construct_name,

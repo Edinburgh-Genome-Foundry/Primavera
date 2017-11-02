@@ -2,8 +2,8 @@
 
 import re
 from collections import OrderedDict
-from .SequencingMatches import (SequenceMatch, SequencingMatches,
-                               SequencingMatchesSet)
+from .ReadReferenceMatches import (SequenceMatch, ReadReferenceMatches,
+                                   ReadReferenceMatchesSet)
 from .biotools import reverse_complement
 
 def simulate_sequencing(sequence, primers, read_length=600, gap=50,
@@ -49,7 +49,7 @@ def simulate_sequencing(sequence, primers, read_length=600, gap=50,
                     result.pop(name)
         if len(result) == 0:
             return None
-        return SequencingMatchesSet(result, linear=linear)
+        return ReadReferenceMatchesSet(result, linear=linear)
 
     primer = primers
 
@@ -99,4 +99,4 @@ def simulate_sequencing(sequence, primers, read_length=600, gap=50,
     primer_matches_r, read_matches_r = simulate_one_read(reverse=True)
     all_primer_matches = primer_matches + primer_matches_r
     all_read_matches = read_matches + read_matches_r
-    return SequencingMatches(record, all_primer_matches, all_read_matches)
+    return ReadReferenceMatches(record, all_primer_matches, all_read_matches)

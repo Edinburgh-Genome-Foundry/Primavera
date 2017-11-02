@@ -283,7 +283,9 @@ class ReadReferenceMatchesSet:
         self.coverage = np.zeros(len(self.reference))
         for matches in read_reference_matches.values():
             for match in matches.read_matches:
-                self.coverage[match.start:match.end] += 1
+                start, end = sorted([match.start, match.end])
+                inds = np.arange(start, end) % len(self.coverage)
+                self.coverage[inds] += 1
 
     def rotated(self, n_bases="auto"):
         if n_bases == "auto":
@@ -414,11 +416,22 @@ class ReadReferenceMatchesSet:
         """
 
         if plot_reference:
-            if features_properties is None:
-                def features_properties(f):
-                    return {"color": "#f9d277"}
 
-            translator = BiopythonTranslator(
+            class MyTranslator(BiopythonTranslator):
+
+                def compute_feature_color(self, f):
+                    return "#f9d277"
+
+                def compute_feature_label(self, f):
+                    return BiopythonTranslator.compute_feature_label(f)[:20]
+
+                def compute_filtered_features(self, features):
+                    def is_not_parameter(f):
+                        label = "".join(f.qualifiers.get('label', ''))
+                        return label not in ('cover', 'no_primer')
+                    return [f for f in features if is_not_parameter(f)]
+
+            translator = MyTranslator(
                 features_filters=features_filters,
                 features_properties=features_properties)
             grecord = translator.translate_record(self.reference)
@@ -451,7 +464,7 @@ class ReadReferenceMatchesSet:
                 reference_ax = fig.add_subplot(gs[:reference_reads_shares[0]])
                 ax = fig.add_subplot(gs[reference_reads_shares[0]:])
 
-            grecord.plot(reference_ax, with_ruler=False)
+            grecord.plot(reference_ax, with_ruler=False, annotate_inline=True)
             self.plot(ax=ax, plot_coverage=plot_coverage, plot_reference=False)
             ax.set_xlim(reference_ax.get_xlim())
             return ax
@@ -460,10 +473,10 @@ class ReadReferenceMatchesSet:
         read_reference_matches = OrderedDict([
             item for item in list(self.read_reference_matches.items())[::-1]
         ])
-
+        L = len(self.reference)
         if ax is None:
             fig, ax = plt.subplots(1, figsize=figsize)
-        ax.set_xlim(0, len(self.reference))
+        ax.set_xlim(0, L)
         ax.set_ylim(0, len(read_reference_matches) + 2)
         ax.set_yticks(range(1, len(read_reference_matches) + 1))
         ax.set_yticklabels([name for name in read_reference_matches])
@@ -472,8 +485,7 @@ class ReadReferenceMatchesSet:
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
 
-        gr_record = GraphicRecord(sequence_length=len(self.reference),
-                                  features=[])
+        gr_record = GraphicRecord(sequence_length=L, features=[])
 
         for i, (read_name, matches) in enumerate(read_reference_matches.items()):
             y = i+1
@@ -492,10 +504,6 @@ class ReadReferenceMatchesSet:
                 gr_record.plot_feature(ax, feature, y, linewidth=0.2)
 
         if plot_coverage:
-            coverage = np.zeros(len(self.reference))
-            for matches in read_reference_matches.values():
-                for match in matches.read_matches:
-                    coverage[match.start:match.end] += 1
             ax.fill_between(range(len(self.coverage)), self.coverage,
                             zorder=-2000, alpha=0.2, facecolor="#a3c3f7")
         return ax

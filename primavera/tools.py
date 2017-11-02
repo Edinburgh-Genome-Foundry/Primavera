@@ -1,3 +1,4 @@
+import numpy as np
 
 def minimal_cover(elements_set, subsets, max_subsets=None, heuristic='default',
                   selected=(), depth=0):
@@ -31,7 +32,6 @@ def minimal_cover(elements_set, subsets, max_subsets=None, heuristic='default',
       None if no solution was found, else a collection of [(name, subset)...]
       in the order in which the subsets
     """
-
 
     if len(elements_set) == 0:
         return []
@@ -87,3 +87,15 @@ def segments_to_array(segments, array_length):
     for start, end in segments:
         array[start: end] = 1
     return array
+
+def group_overlapping_segments(segments, min_distance=10):
+    if segments == []:
+        return []
+    returned_segments = [list(segments[0])]
+    for start, end in segments[1:]:
+        if start < returned_segments[-1][-1] + min_distance:
+            if end > returned_segments[-1][-1]:
+                returned_segments[-1][-1] = end
+        else:
+            returned_segments.append([start, end])
+    return [tuple(s) for s in returned_segments]
