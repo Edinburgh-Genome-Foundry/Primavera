@@ -211,8 +211,8 @@ def get_segment_coordinates(center, segment_length, sequence_length):
     end = start + segment_length
     return start, end
 
-def find_best_primer_locations(sequence, primer_length_range=(15, 25),
-                               primer_tm_range=(55, 70)):
+def find_best_primer_locations(sequence, size_range=(15, 25),
+                               tm_range=(55, 70)):
     """Quickly compute all overhangs in the sequence.
 
     This function uses the heuristic {A, T}=2degC, {G, C}=4degC to compute
@@ -221,8 +221,8 @@ def find_best_primer_locations(sequence, primer_length_range=(15, 25),
     This function uses vectorial operations for speed. The results are also
     cached.
     """
-    lmin, lmax = primer_length_range
-    tmin, tmax = primer_tm_range
+    lmin, lmax = size_range
+    tmin, tmax = tm_range
 
     table = np.zeros((lmax + 1 - lmin, len(sequence)))
     cumsum = np.cumsum([2 if nuc in "GC" else 4 for nuc in sequence])
@@ -256,7 +256,7 @@ def find_non_unique_segments(sequence, perc_identity=80):
     ]))
     return group_overlapping_segments(segments_with_alignments)
 
-def load_record(filename, linear=True, name="unnamed"):
+def load_record(filename, linear=True, name='auto'):
     if filename.lower().endswith(("gb", "gbk")):
         record = SeqIO.read(filename, "genbank")
     elif filename.lower().endswith(('fa', 'fasta')):
@@ -264,6 +264,8 @@ def load_record(filename, linear=True, name="unnamed"):
     else:
         raise ValueError('Unknown format for file: %s' % filename)
     record.linear = linear
+    if name == 'auto':
+        name = os.path.splitext(os.path.basename(filename))[0]
     record.id = name
     record.name = name.replace(" ", "_")[:20]
     return record

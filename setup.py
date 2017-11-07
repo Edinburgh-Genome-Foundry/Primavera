@@ -13,4 +13,5 @@ setup(
     long_description=open('README.rst').read(),
     license='see LICENSE.txt',
     keywords="DNA assembly sequencing primer design",
-    packages= find_packages(exclude='docs'))
+    packages= find_packages(exclude='docs'),
+    install_requires=["numpy", "Biopython", "proglog", 'flametree'])

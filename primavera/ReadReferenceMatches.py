@@ -415,23 +415,22 @@ class ReadReferenceMatchesSet:
         ax
         """
 
+        class AnnotationsGraphicTranslator(BiopythonTranslator):
+
+            def compute_feature_color(self, f):
+                return "#f9d277"
+
+            def compute_feature_label(self, f):
+                return BiopythonTranslator.compute_feature_label(f)[:20]
+
+            def compute_filtered_features(self, features):
+                def is_not_parameter(f):
+                    label = "".join(f.qualifiers.get('label', ''))
+                    return label not in ('cover', 'no_primer')
+                return [f for f in features if is_not_parameter(f)]
+
         if plot_reference:
-
-            class MyTranslator(BiopythonTranslator):
-
-                def compute_feature_color(self, f):
-                    return "#f9d277"
-
-                def compute_feature_label(self, f):
-                    return BiopythonTranslator.compute_feature_label(f)[:20]
-
-                def compute_filtered_features(self, features):
-                    def is_not_parameter(f):
-                        label = "".join(f.qualifiers.get('label', ''))
-                        return label not in ('cover', 'no_primer')
-                    return [f for f in features if is_not_parameter(f)]
-
-            translator = MyTranslator(
+            translator = AnnotationsGraphicTranslator(
                 features_filters=features_filters,
                 features_properties=features_properties)
             grecord = translator.translate_record(self.reference)
@@ -476,7 +475,7 @@ class ReadReferenceMatchesSet:
         L = len(self.reference)
         if ax is None:
             fig, ax = plt.subplots(1, figsize=figsize)
-        ax.set_xlim(0, L)
+        ax.set_xlim(-2, L)
         ax.set_ylim(0, len(read_reference_matches) + 2)
         ax.set_yticks(range(1, len(read_reference_matches) + 1))
         ax.set_yticklabels([name for name in read_reference_matches])
@@ -489,12 +488,16 @@ class ReadReferenceMatchesSet:
 
         for i, (read_name, matches) in enumerate(read_reference_matches.items()):
             y = i+1
-            ax.axhline(y, ls=":", lw=0.5, color="k", zorder=-1000)
+            ax.axhline(y, ls=":", lw=0.5, color="#aaaaaa", zorder=-1000)
+            if matches.primer.metadata.get('available', False):
+                color = '#f7a3f6'
+            else:
+                color = "#a3c3f7"
             for match in matches.read_matches:
                 gr_record.features = [GraphicFeature(start=match.start,
                                                      end=match.end,
                                                      strand=match.strand,
-                                                     color="#a3c3f7")]
+                                                     color=color)]
                 gr_record.split_overflowing_features_circularly()
                 for feature in gr_record.features:
                     gr_record.plot_feature(ax, feature, y, linewidth=0.2)

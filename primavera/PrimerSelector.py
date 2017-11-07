@@ -1,11 +1,16 @@
 from copy import deepcopy
+import re
 from collections import defaultdict
+
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+import numpy as np
+
+from proglog import TqdmProgressBarLogger, ProgressBarLogger
 from dnachisel import (AvoidPattern, repeated_kmers, homopolymer_pattern,
                        DnaOptimizationProblem)
 
-from proglog import TqdmProgressBarLogger
-import numpy as np
-
+from .sequencing_simulation import simulate_sequencing
 from .biotools import (reverse_complement, find_non_unique_segments,
                        find_best_primer_locations)
 from .tools import minimal_cover, segments_to_array, group_overlapping_segments
@@ -16,27 +21,29 @@ class PrimerSelectorLogger(TqdmProgressBarLogger):
     def __init__(self, bars=('record', 'primer'), notebook='default'):
         ignored_bars = set(('record', 'primer')).difference(bars)
         TqdmProgressBarLogger.__init__(self, bars=bars, notebook=notebook,
-                                       ignored_bars=ignored_bars)
+                                       ignored_bars=ignored_bars,
+                                       min_time_interval=0.2)
 
 class PrimerSelector:
 
-    def __init__(self, read_range=(150, 800), primer_length_range=(16, 25),
-                 primer_tm_range=(55, 70), primer_conditions=(),
+    def __init__(self, read_range=(150, 800), size_range=(16, 25),
+                 tm_range=(55, 70), primer_conditions=(),
                  primer_reuse_bonus=2, logger='bars',
                  coverage_resolution=5):
         self.read_range = read_range
-        self.primer_length_range = primer_length_range
-        self.primer_tm_range = primer_tm_range
+        self.size_range = size_range
+        self.tm_range = tm_range
         self.primers_conditions = primer_conditions
         self.coverage_resolution = coverage_resolution
         self.primer_reuse_bonus = 2
         if logger == 'bars':
             logger = PrimerSelectorLogger()
         if logger is None:
-            logger = PrimerSelectorLogger()
+            logger = ProgressBarLogger()
         self.logger = logger
 
-    def select_primers(self, records, available_primers):
+    def select_primers(self, records, available_primers=(),
+                       new_primers_prefix='P', new_primers_digits=6):
 
         available_primers_dict = {p.sequence: p for p in available_primers}
         available_primers_seqs = set([p.sequence for p in available_primers])
@@ -44,6 +51,7 @@ class PrimerSelector:
         # COMPUTE PRIMERS AND COVERAGES
         indices_to_cover = {}
         primers_coverages = defaultdict(lambda *a: set())
+        self.logger(message='Analyzing the records...')
         for record in self.logger.iter_bar(record=records):
             indices_to_cover[record.id] = {
                 ind: '%s_%03d' % (record.id, ind)
@@ -56,6 +64,7 @@ class PrimerSelector:
                 primers_coverages[primer].update(coverage)
 
         # FIND GLOBAL MINIMAL COVER
+        self.logger(message='Selecting primers...')
         elements_set = set(
             index
             for rec_id, named_indices in indices_to_cover.items()
@@ -66,11 +75,13 @@ class PrimerSelector:
             primer_is_reused = name in available_primers_seqs
             reuse_bonus = self.primer_reuse_bonus * primer_is_reused
             return len(subset) + reuse_bonus
-        subsets = deepcopy(list(primers_coverages.items()))
+        #subsets = deepcopy(list(primers_coverages.items()))
+        subsets = primers_coverages.items()
         primers_cover = minimal_cover(elements_set, subsets=subsets,
                                       heuristic=heuristic)
 
         # REORGANIZE AND NAME THE SELECTED PRIMERS
+        available_primers_names = [p.name for p in available_primers]
         selected_primers = []
         selected_primer_from_seq = {}
         for primer_seq in primers_cover:
@@ -80,7 +91,12 @@ class PrimerSelector:
                 primer = Primer(primer.name, primer.sequence,
                                 metadata={'available': True})
             else:
-                name = self.name_subsequence_in_records(primer_seq, records)
+                name = self.generate_primer_name(
+                    available_primers_names=available_primers_names,
+                    prefix=new_primers_prefix,
+                    n_digits=new_primers_digits
+                )
+                available_primers_names.append(name)
                 primer = Primer(name, primer_seq,
                                 metadata={'available': False})
             selected_primers.append(primer)
@@ -88,20 +104,25 @@ class PrimerSelector:
 
         # CHOOSE A MINIMAL PRIMER COVER FOR EACH CONSTRUCT
         per_record_primers = []
-        for record in records:
+        for record in self.logger.iter_bar(record=records):
             elements = set(indices_to_cover[record.id].values())
             subcovers = {
                 prim_seq: primers_coverages[prim_seq].intersection(elements)
                 for prim_seq in primers_cover
             }
-            subsets = deepcopy(list(subcovers.items()))
+            # subsets = deepcopy(list(subcovers.items()))
+            subsets = list(subcovers.items())
             sub_primers_cover = minimal_cover(elements, subsets=subsets,
                                               heuristic=heuristic)
-            sub_selected_primers = [
+
+            # All primers selected for this construct, sorted by availability.
+            sub_selected_primers = sorted([
                 selected_primer_from_seq[primer_seq]
                 for primer_seq in sub_primers_cover
-            ]
+            ], key=lambda p: p.metadata['available'])
+
             per_record_primers.append(sub_selected_primers)
+
         return per_record_primers
 
     def compute_indices_to_cover(self, record):
@@ -174,8 +195,8 @@ class PrimerSelector:
         rev_sequence = reverse_complement(sequence)
         locations = find_best_primer_locations(
             sequence,
-            primer_tm_range=self.primer_tm_range,
-            primer_length_range=self.primer_length_range
+            tm_range=self.tm_range,
+            size_range=self.size_range
         )
         return list(set(sum([
             [
@@ -216,17 +237,16 @@ class PrimerSelector:
                 coverage_start = start - self.read_range[1]
                 coverage_end = start - self.read_range[0]
             if (not linear) and (coverage_start < 0):
-                segments = [(-np.inf, coverage_end),
-                            (L + coverage_start, np.inf)]
+                a, b, c, d = -1000, coverage_end, L + coverage_start, L + 1000
             elif (not linear) and (coverage_end > L):
-                segments = [(-np.inf, coverage_end - L),
-                            (coverage_start, np.inf)]
+                a, b, c, d = -1000, coverage_end - L, coverage_start, L + 1000
             else:
-                segments = [(coverage_start, coverage_end)]
+                a, b, c, d = (coverage_start, coverage_end,
+                              coverage_start, coverage_end)
             primers_coverages[primer] = set([
-                indice_name
-                for ind, indice_name in indices_to_cover.items()
-                if any([(a <= ind <= b) for (a, b) in segments])
+                indices_to_cover[ind]
+                for ind in indices_to_cover
+                if (a <= ind <= b) or (c <= ind <= d)
             ])
         return primers_coverages
 
@@ -247,7 +267,19 @@ class PrimerSelector:
                 % (index, record.id)
             )
 
-    def name_subsequence_in_records(self, sequence, records, prefix='EM_'):
+    def generate_primer_name(self, prefix='P', available_primers_names=(),
+                             n_digits=6):
+        max_index = 0
+        for name in available_primers_names:
+            if not name.startswith(prefix):
+                continue
+            index = int(re.search(r'\d+', name[len(prefix):]).group())
+            if (index is not None) and (index > max_index):
+                max_index = index
+        return prefix + str(max_index + 1).zfill(n_digits)
+
+
+    def name_subsequence_in_records(self, sequence, records, prefix='P'):
         for r in records:
             ind = r.seq.find(sequence)
             if ind > 0:
@@ -261,3 +293,31 @@ class PrimerSelector:
         else:
             raise ValueError('sequence not found in records')
         return "%s%s_%04d" % (prefix, part_name, index)
+
+    def plot_coverage(self, records, selected_primers, pdf_path):
+        """Plot the predicted sequencing coverage for each construct."""
+        # PLOT THE PREDICTED SEQUENCING COVERAGE FOR EACH CONSTRUCT
+
+        with PdfPages(pdf_path) as pdf:
+            iterator = zip(records, selected_primers)
+            self.logger(message='Plotting coverages...')
+            for record, primers in self.logger.iter_bar(record=iterator):
+                matches_set = simulate_sequencing(
+                    record, primers=primers, read_range=self.read_range,
+                    linear=record.__dict__.get('linear', True)
+                )
+                ax = matches_set.plot(plot_reference=True, plot_coverage=False)
+                ax.set_title(record.id, fontsize=14, weight='bold')
+                for x in self.compute_indices_to_cover(record):
+                    ax.axvline(x, c='#fceddb', lw=2, ls='--', zorder=-2000)
+                pdf.savefig(ax.figure, bbox_inches='tight')
+                plt.close(ax.figure)
+
+    def write_primers_table(self, primers, csv_path=None):
+        if isinstance(primers[0], (list, tuple)):
+            primers = set([p for pp in primers for p in pp])
+        df = Primer.list_to_spreadsheet(primers)
+        df = df.sort_values(by=['available', 'name'])
+        if csv_path is not None:
+            df.to_csv(csv_path, index=False)
+        return df

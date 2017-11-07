@@ -49,7 +49,7 @@ class Primer:
 
     @staticmethod
     def list_to_fasta(primers_list, filepath=None):
-        fasta = "\n".join([
+        fasta = "\n\n".join([
             ">%s\n%s" % (primer.name, primer.sequence)
             for primer in primers_list
         ])
@@ -70,7 +70,7 @@ class Primer:
             Primer(name=r['name'], sequence=r['sequence'],
                    metadata=dict((k, v) for (k, v) in r.items()
                                  if k not in ['name', 'sequence']))
-            for r in dataframe.to_records(orientation='records')
+            for r in dataframe.to_dict(orient='record')
         ]
 
     @staticmethod
@@ -86,8 +86,7 @@ class Primer:
                 dict([('name', primer.name), ('sequence', primer.sequence)] +
                      list(primer.metadata.items()))
                 for primer in primers_list
-            ],
-            index='name'
+            ]
         )
 
         if filepath is not None:
