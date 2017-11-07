@@ -10,12 +10,19 @@ Primavera
    :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera
    :alt: Travis CI build status
 
+(documentation under construction)
+
 Primavera is a Python library to plan and analyze primer-based verification of DNA assemblies, using Sanger sequencing or verification PCR. It implements methods to design and select primers to ensure that the relevant assembly segments will be covered, and it
 
 Usage
 -----
 
-**For primer selection**, assuming
+**Primer selection**
+
+The following code assumes that a file ``available_primers.fa`` contains the labels and sequences of all available primers in the lab, and that the assemblies to be sequence-verified have annotations indicating the zones that the sequencing should cover and zones where primer annealing should be avoided.
+
+.. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/annotated_genbank.png
+   :width: 600px
 
 .. code:: python
 
@@ -34,6 +41,14 @@ Usage
     # PLOT THE COVERAGE AND WRITE THE PRIMERS IN A SPREADSHEET
     selector.plot_coverage(records, selected_primers, 'coverage.pdf')
     selector.write_primers_table(selected_primers, 'selected_primers.csv')
+
+The returned ``selected_primers`` contains a list of lists of primers (one list for each construct). The PDF report returned looks like this:
+
+.. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/annotated_primer_selection.png
+   :width: 600px
+
+**Sequencing Validation**
+
 
 
 Installation

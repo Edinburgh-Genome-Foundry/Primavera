@@ -5,7 +5,7 @@ import os
 constructs_path = os.path.join('data', 'constructs')
 primers_path = os.path.join('data', "available_primers.fa")
 records = [load_record(os.path.join(constructs_path, f), linear=False)
-           for f in sorted(os.listdir(constructs_path))]
+           for f in sorted(os.listdir(constructs_path)) if f.endswith('.gb')]
 available_primers = Primer.list_from_fasta(primers_path)
 
 
@@ -15,15 +15,10 @@ selected_primers = selector.select_primers(records, available_primers)
 
 
 # PLOT THE PREDICTED SEQUENCING COVERAGE FOR EACH CONSTRUCT
-selector.plot_coverage(
-    records=records,
-    selected_primers=selected_primers,
-    pdf_path='primer_selection_example.pdf'
-)
+selector.plot_coverage(records=records, selected_primers=selected_primers,
+                       pdf_path='primer_selection_example.pdf')
 
 
 # WRITE ALL PRIMERS IN A CSV FILE (PRIMERS TO ORDER ARE FIRST)
-selector.write_primers_table(
-    primers=selected_primers,
-    csv_path='primer_selection_example.csv'
-)
+selector.write_primers_table(primers=selected_primers,
+                             csv_path='primer_selection_example.csv')
