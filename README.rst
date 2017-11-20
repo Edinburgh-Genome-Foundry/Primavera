@@ -49,12 +49,14 @@ The returned ``selected_primers`` contains a list of lists of primers (one list 
 
 **Sequencing Validation**
 
+(documentation for this feature is coming soon)
+
 
 
 Installation
 -------------
 
-(Soon) You can install DnaChisel through PIP
+(Soon) You can install Primavera through PIP
 
 .. code::
 
@@ -69,7 +71,7 @@ Alternatively, you can unzip the sources in a folder and type
 License = MIT
 --------------
 
-Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/DnaChisel>`_ under the MIT licence (¢ Edinburg Genome Foundry).
+Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (¢ Edinburg Genome Foundry).
 
 Everyone is welcome to contribute !
 

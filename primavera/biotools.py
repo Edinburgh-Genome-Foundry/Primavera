@@ -225,7 +225,7 @@ def find_best_primer_locations(sequence, size_range=(15, 25),
     tmin, tmax = tm_range
 
     table = np.zeros((lmax + 1 - lmin, len(sequence)))
-    cumsum = np.cumsum([2 if nuc in "GC" else 4 for nuc in sequence])
+    cumsum = np.cumsum([4 if nuc in "GC" else 2 for nuc in sequence])
     for i, oh_size in enumerate(range(lmin, lmax + 1)):
         arr = cumsum[oh_size:] - cumsum[:-oh_size]
         start = int(oh_size / 2)

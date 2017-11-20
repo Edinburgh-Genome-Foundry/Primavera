@@ -14,4 +14,5 @@ setup(
     license='see LICENSE.txt',
     keywords="DNA assembly sequencing primer design",
     packages= find_packages(exclude='docs'),
-    install_requires=["numpy", "Biopython", "proglog", 'flametree'])
+    install_requires=["numpy", "Biopython", "proglog", 'flametree', 'pandas',
+                      'dna_features_viewer', 'dnachisel'])
