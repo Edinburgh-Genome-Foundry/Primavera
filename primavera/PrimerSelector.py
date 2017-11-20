@@ -224,7 +224,8 @@ class PrimerSelector:
         segments_to_cover = [
             sorted([int(f.location.start), int(f.location.end)])
             for f in record.features
-            if f.type == 'misc_feature'
+            if f.location is not None
+            and f.type == 'misc_feature'
             and "".join(f.qualifiers.get('label', '')) == 'cover'
         ]
         res = self.coverage_resolution
