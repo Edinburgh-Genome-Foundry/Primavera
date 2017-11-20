@@ -276,7 +276,8 @@ class PrimerSelector:
         forbidden_segments = [
             sorted([int(f.location.start), int(f.location.end)])
             for f in record.features
-            if f.type == 'misc_feature'
+            if f.location is not None
+            and f.type == 'misc_feature'
             and "".join(f.qualifiers.get('label', '')) == 'no_primer'
         ]
         return segments_to_array(forbidden_segments, len(record))
