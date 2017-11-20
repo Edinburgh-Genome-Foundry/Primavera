@@ -2,6 +2,9 @@ language: python
 python:
   - "3.6"
 # command to install dependencies
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install ncbi-blast+
 install:
   - pip install pytest jinja2 weasyprint dna_features_viewer
   - pip install -e .
