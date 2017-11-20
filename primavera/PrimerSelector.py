@@ -418,10 +418,11 @@ class PrimerSelector:
         """
         max_index = 0
         for name in available_primers_names:
-            if not name.startswith(prefix):
+            match = re.match(prefix + '(\d+)', name)
+            if match is None:
                 continue
-            index = int(re.search(r'\d+', name[len(prefix):]).group())
-            if (index is not None) and (index > max_index):
+            index = int(match.groups()[0])
+            if (index > max_index):
                 max_index = index
         return prefix + str(max_index + 1).zfill(n_digits)
 
