@@ -113,7 +113,4 @@ Everyone is welcome to contribute !
 
    examples/primer_selection_example
 
-
-.. _Zulko: https://github.com/Zulko/
-.. _Github: https://github.com/EdinburghGenomeFoundry/primavera
 .. _PYPI: https://pypi.python.org/pypi/primavera
