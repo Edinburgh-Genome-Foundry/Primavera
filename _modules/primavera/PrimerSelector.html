@@ -1,0 +1,867 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>primavera.PrimerSelector &mdash; Primavera 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/css/main.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Primavera 0.1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Primavera
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Primavera</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ref/ref.html">Primavera Reference manual</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/primer_selection_example.html">Primer selection example</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Primavera</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>primavera.PrimerSelector</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for primavera.PrimerSelector</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Class to automatically select available and new primers for sequencing runs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="k">import</span> <span class="n">PdfPages</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">flametree</span>
+<span class="kn">from</span> <span class="nn">proglog</span> <span class="k">import</span> <span class="n">TqdmProgressBarLogger</span><span class="p">,</span> <span class="n">ProgressBarLogger</span>
+<span class="kn">from</span> <span class="nn">dnachisel</span> <span class="k">import</span> <span class="p">(</span><span class="n">AvoidPattern</span><span class="p">,</span> <span class="n">repeated_kmers</span><span class="p">,</span> <span class="n">homopolymer_pattern</span><span class="p">,</span>
+                       <span class="n">DnaOptimizationProblem</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.sequencing_simulation</span> <span class="k">import</span> <span class="n">simulate_sequencing</span>
+<span class="kn">from</span> <span class="nn">.biotools</span> <span class="k">import</span> <span class="p">(</span><span class="n">reverse_complement</span><span class="p">,</span> <span class="n">find_non_unique_segments</span><span class="p">,</span>
+                       <span class="n">find_best_primer_locations</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.tools</span> <span class="k">import</span> <span class="n">minimal_cover</span><span class="p">,</span> <span class="n">segments_to_array</span><span class="p">,</span> <span class="n">group_overlapping_segments</span>
+<span class="kn">from</span> <span class="nn">.Primer</span> <span class="k">import</span> <span class="n">Primer</span>
+
+
+<span class="k">class</span> <span class="nc">PrimerSelectorLogger</span><span class="p">(</span><span class="n">TqdmProgressBarLogger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Custom logger class adapted to the logger selector.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bars</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;record&#39;</span><span class="p">,</span> <span class="s1">&#39;primer&#39;</span><span class="p">),</span> <span class="n">notebook</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">):</span>
+        <span class="n">ignored_bars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;record&#39;</span><span class="p">,</span> <span class="s1">&#39;primer&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">bars</span><span class="p">)</span>
+        <span class="n">TqdmProgressBarLogger</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bars</span><span class="o">=</span><span class="n">bars</span><span class="p">,</span> <span class="n">notebook</span><span class="o">=</span><span class="n">notebook</span><span class="p">,</span>
+                                       <span class="n">ignored_bars</span><span class="o">=</span><span class="n">ignored_bars</span><span class="p">,</span>
+                                       <span class="n">min_time_interval</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PrimerSelector"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector">[docs]</a><span class="k">class</span> <span class="nc">PrimerSelector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A selector to compute the best primers to sequence a set of constructs.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; selector = PrimerSelector()</span>
+<span class="sd">    &gt;&gt;&gt; selected_primers = selector.select_primers(records, available_primers)</span>
+<span class="sd">    &gt;&gt;&gt; selector.plot_coverage(records, selected_primers, &#39;my_report.pdf&#39;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+
+<span class="sd">    read_range</span>
+<span class="sd">      The experimentally measured range (start, end) so that, when a primer</span>
+<span class="sd">      anneals in the sequence at index i, the range ``[i + start, i + end]`` will</span>
+<span class="sd">      be correctly sequenced.</span>
+
+<span class="sd">    size_range</span>
+<span class="sd">      Size range (min, max) for the size of the primers, in nucleotides.</span>
+
+<span class="sd">    tm_range</span>
+<span class="sd">      Acceptable melting temperature range for the primers (in Celsius), as</span>
+<span class="sd">      computed using the heuristic A/T=2C, G/C=4C</span>
+
+<span class="sd">    primer_conditions</span>
+<span class="sd">      A list of functions of the form ``primer_sequence =&gt; True/False``.</span>
+<span class="sd">      Primers for which at least one condition returns False will not be</span>
+<span class="sd">      considered.</span>
+
+<span class="sd">    primer_reuse_bonus</span>
+<span class="sd">      Weight that the availability of the primer should have in the decision</span>
+<span class="sd">      to select this primer. A higher value of this parameter leads to</span>
+<span class="sd">      solutions where a higher less new primershave to be ordered, but more</span>
+<span class="sd">      sequencing reactions have to be done. Set to e.g. 200 to test if there</span>
+<span class="sd">      exists solutions involving solely already-available primers.</span>
+
+<span class="sd">    logger</span>
+<span class="sd">      Leave to &#39;bars&#39; for default progress-bar logger, to None for no logger,</span>
+<span class="sd">      or any Proglog ProgressBarLogger object.</span>
+
+<span class="sd">    coverage_resolution</span>
+<span class="sd">      When the user provides a record with &quot;cover&quot; features to indicate where</span>
+<span class="sd">      to cover, the coverage points used by the algorithm are the 1-in-N</span>
+<span class="sd">      nucleotides along the feature region, where N is this parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_range</span><span class="o">=</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">800</span><span class="p">),</span> <span class="n">size_range</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span>
+                 <span class="n">tm_range</span><span class="o">=</span><span class="p">(</span><span class="mi">55</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="n">primer_conditions</span><span class="o">=</span><span class="p">(),</span>
+                 <span class="n">primer_reuse_bonus</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="s1">&#39;bars&#39;</span><span class="p">,</span>
+                 <span class="n">coverage_resolution</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_range</span> <span class="o">=</span> <span class="n">read_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_range</span> <span class="o">=</span> <span class="n">size_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tm_range</span> <span class="o">=</span> <span class="n">tm_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primers_conditions</span> <span class="o">=</span> <span class="n">primer_conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coverage_resolution</span> <span class="o">=</span> <span class="n">coverage_resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primer_reuse_bonus</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">logger</span> <span class="o">==</span> <span class="s1">&#39;bars&#39;</span><span class="p">:</span>
+            <span class="n">logger</span> <span class="o">=</span> <span class="n">PrimerSelectorLogger</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span> <span class="o">=</span> <span class="n">ProgressBarLogger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+
+<div class="viewcode-block" id="PrimerSelector.select_primers"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.select_primers">[docs]</a>    <span class="k">def</span> <span class="nf">select_primers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">available_primers</span><span class="o">=</span><span class="p">(),</span>
+                       <span class="n">new_primers_prefix</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="n">new_primers_digits</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Select primers to sequence the given records.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        records</span>
+<span class="sd">          A list of biopython records to sequence. The zones to cover in the</span>
+<span class="sd">          record should be indicated by a feature of type ``misc_feature`` and</span>
+<span class="sd">          label ``cover``. The zones where no primers are desired should be</span>
+<span class="sd">          indicated by a feature of type ``misc_feature`` and label</span>
+<span class="sd">          ``no_primer``.</span>
+
+<span class="sd">        available_primers</span>
+<span class="sd">          List of Primer objects representing the available primers.</span>
+
+<span class="sd">        new_primers_prefix</span>
+<span class="sd">          Prefix to use for names of the new primers</span>
+
+<span class="sd">        new_primers_digits</span>
+<span class="sd">          The new primers will have names of the form P000435, with a number</span>
+<span class="sd">          of digits provided by this parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        selected_primers</span>
+<span class="sd">          A list of lists of primers, one list of primers for each consrtruct.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">available_primers_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">sequence</span><span class="p">:</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">available_primers</span><span class="p">}</span>
+        <span class="n">available_primers_seqs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">sequence</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">available_primers</span><span class="p">])</span>
+
+        <span class="c1"># COMPUTE PRIMERS AND COVERAGES</span>
+        <span class="n">indices_to_cover</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">primers_coverages</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">:</span> <span class="nb">set</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Analyzing the records...&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iter_bar</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="n">records</span><span class="p">):</span>
+            <span class="n">indices_to_cover</span><span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">ind</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%03d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_indices_to_cover</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">coverages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_all_primers_coverage_on_record</span><span class="p">(</span>
+                <span class="n">record</span><span class="p">,</span> <span class="n">available_primers</span><span class="o">=</span><span class="n">available_primers_seqs</span><span class="p">,</span>
+                <span class="n">indices_to_cover</span><span class="o">=</span><span class="n">indices_to_cover</span><span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">primer</span><span class="p">,</span> <span class="n">coverage</span> <span class="ow">in</span> <span class="n">coverages</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">primers_coverages</span><span class="p">[</span><span class="n">primer</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">coverage</span><span class="p">)</span>
+
+        <span class="c1"># FIND GLOBAL MINIMAL COVER</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Selecting primers...&#39;</span><span class="p">)</span>
+        <span class="n">elements_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">index</span>
+            <span class="k">for</span> <span class="n">rec_id</span><span class="p">,</span> <span class="n">named_indices</span> <span class="ow">in</span> <span class="n">indices_to_cover</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">named_indices</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">heuristic</span><span class="p">(</span><span class="n">named_subset</span><span class="p">,</span> <span class="n">selected</span><span class="p">):</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">subset</span> <span class="o">=</span> <span class="n">named_subset</span>
+            <span class="n">primer_is_reused</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">available_primers_seqs</span>
+            <span class="n">reuse_bonus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primer_reuse_bonus</span> <span class="o">*</span> <span class="n">primer_is_reused</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span> <span class="o">+</span> <span class="n">reuse_bonus</span>
+
+        <span class="n">subsets</span> <span class="o">=</span> <span class="n">primers_coverages</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="n">primers_cover</span> <span class="o">=</span> <span class="n">minimal_cover</span><span class="p">(</span><span class="n">elements_set</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">,</span>
+                                      <span class="n">heuristic</span><span class="o">=</span><span class="n">heuristic</span><span class="p">)</span>
+
+        <span class="c1"># REORGANIZE AND NAME THE SELECTED PRIMERS</span>
+        <span class="n">available_primers_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">available_primers</span><span class="p">]</span>
+        <span class="n">selected_primers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">selected_primer_from_seq</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">primer_seq</span> <span class="ow">in</span> <span class="n">primers_cover</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">primer_seq</span> <span class="ow">in</span> <span class="n">available_primers_dict</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">available_primers_dict</span><span class="p">[</span><span class="n">primer_seq</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">primer</span> <span class="o">=</span> <span class="n">available_primers_dict</span><span class="p">[</span><span class="n">primer_seq</span><span class="p">]</span>
+                <span class="n">infos</span> <span class="o">=</span> <span class="n">primer</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;infos&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">primer</span> <span class="o">=</span> <span class="n">Primer</span><span class="p">(</span><span class="n">primer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">primer</span><span class="o">.</span><span class="n">sequence</span><span class="p">,</span>
+                                <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;available&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;infos&#39;</span><span class="p">:</span> <span class="n">infos</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_primer_name</span><span class="p">(</span>
+                    <span class="n">available_primers_names</span><span class="o">=</span><span class="n">available_primers_names</span><span class="p">,</span>
+                    <span class="n">prefix</span><span class="o">=</span><span class="n">new_primers_prefix</span><span class="p">,</span>
+                    <span class="n">n_digits</span><span class="o">=</span><span class="n">new_primers_digits</span>
+                <span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">part</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_subsequence_in_records</span><span class="p">(</span>
+                        <span class="n">sequence</span><span class="o">=</span><span class="n">primer_seq</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="n">records</span><span class="p">)</span>
+                    <span class="n">infos</span> <span class="o">=</span> <span class="s2">&quot;From part </span><span class="si">%s</span><span class="s2"> (at position </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">infos</span> <span class="o">=</span> <span class="s2">&quot;No containing part could be identified&quot;</span>
+                <span class="n">available_primers_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">primer</span> <span class="o">=</span> <span class="n">Primer</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">primer_seq</span><span class="p">,</span>
+                                <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;available&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;infos&#39;</span><span class="p">:</span> <span class="n">infos</span><span class="p">})</span>
+            <span class="n">selected_primers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">primer</span><span class="p">)</span>
+            <span class="n">selected_primer_from_seq</span><span class="p">[</span><span class="n">primer_seq</span><span class="p">]</span> <span class="o">=</span> <span class="n">primer</span>
+
+        <span class="c1"># CHOOSE A MINIMAL PRIMER COVER FOR EACH CONSTRUCT</span>
+        <span class="n">per_record_primers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iter_bar</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="n">records</span><span class="p">):</span>
+            <span class="n">elements</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices_to_cover</span><span class="p">[</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">subcovers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">prim_seq</span><span class="p">:</span> <span class="n">primers_coverages</span><span class="p">[</span><span class="n">prim_seq</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">prim_seq</span> <span class="ow">in</span> <span class="n">primers_cover</span>
+            <span class="p">}</span>
+            <span class="c1"># subsets = deepcopy(list(subcovers.items()))</span>
+            <span class="n">subsets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">subcovers</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="n">sub_primers_cover</span> <span class="o">=</span> <span class="n">minimal_cover</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">,</span>
+                                              <span class="n">heuristic</span><span class="o">=</span><span class="n">heuristic</span><span class="p">)</span>
+
+            <span class="c1"># All primers selected for this construct, sorted by availability.</span>
+            <span class="n">sub_selected_primers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span>
+                <span class="n">selected_primer_from_seq</span><span class="p">[</span><span class="n">primer_seq</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">primer_seq</span> <span class="ow">in</span> <span class="n">sub_primers_cover</span>
+            <span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;available&#39;</span><span class="p">])</span>
+
+            <span class="n">per_record_primers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_selected_primers</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">per_record_primers</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_indices_to_cover"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_indices_to_cover">[docs]</a>    <span class="k">def</span> <span class="nf">compute_indices_to_cover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List all indices in the record which should be covered.</span>
+
+<span class="sd">        These indices are equidistant points inside the user-defined zones to</span>
+<span class="sd">        cover in the record.</span>
+
+<span class="sd">        The use determines the zones to cover via features of</span>
+<span class="sd">        type ``misc_feature`` and label &#39;cover&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">segments_to_cover</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">sorted</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">)])</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">features</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;misc_feature&#39;</span>
+            <span class="ow">and</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">qualifiers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;cover&#39;</span>
+        <span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage_resolution</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">indice</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="ow">in</span> <span class="n">segments_to_cover</span>
+            <span class="k">for</span> <span class="n">indice</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">res</span><span class="p">)</span>
+        <span class="p">])</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.locate_primer_sequence"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.locate_primer_sequence">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">locate_primer_sequence</span><span class="p">(</span><span class="n">primer</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the location (start, end, strand) of a primer in the sequence.</span>
+
+<span class="sd">        Return None if the primer sequence and its reverse complement are not</span>
+<span class="sd">        found in the sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">primer</span><span class="p">)</span>
+        <span class="n">strand</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">reverse_complement</span><span class="p">(</span><span class="n">primer</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">strand</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">ind</span><span class="p">,</span> <span class="n">ind</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">primer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">strand</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_forbidden_patterns_locations"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_forbidden_patterns_locations">[docs]</a>    <span class="k">def</span> <span class="nf">compute_forbidden_patterns_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an array where ``arr[i] == 1`` means that i is surrounded by</span>
+<span class="sd">        a user-forbidden pattern.&quot;&quot;&quot;</span>
+        <span class="n">pattern_constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">AvoidPattern</span><span class="p">(</span><span class="n">homopolymer_pattern</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+                               <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="s1">&#39;ATGC&#39;</span><span class="p">]</span>
+        <span class="n">kmer_constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">AvoidPattern</span><span class="p">(</span><span class="n">repeated_kmers</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+                            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]]</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">DnaOptimizationProblem</span><span class="p">(</span>
+            <span class="n">sequence</span><span class="o">=</span><span class="n">record</span><span class="p">,</span>
+            <span class="n">constraints</span><span class="o">=</span><span class="n">pattern_constraints</span> <span class="o">+</span> <span class="n">kmer_constraints</span>
+        <span class="p">)</span>
+        <span class="n">constraints_breaches</span> <span class="o">=</span> <span class="n">group_overlapping_segments</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">constraints_evaluations</span><span class="p">()</span><span class="o">.</span><span class="n">locations_as_features</span><span class="p">()</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">segments_to_array</span><span class="p">(</span><span class="n">constraints_breaches</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_user_forbidden_locations"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_user_forbidden_locations">[docs]</a>    <span class="k">def</span> <span class="nf">compute_user_forbidden_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an array where ``arr[i] == 1`` means that i is surrounded by</span>
+<span class="sd">        a user-forbidden location.&quot;&quot;&quot;</span>
+        <span class="n">forbidden_segments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">sorted</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">)])</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">features</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;misc_feature&#39;</span>
+            <span class="ow">and</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">qualifiers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;no_primer&#39;</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">segments_to_array</span><span class="p">(</span><span class="n">forbidden_segments</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_nonunique_segments_locations"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_nonunique_segments_locations">[docs]</a>    <span class="k">def</span> <span class="nf">compute_nonunique_segments_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an array where ``arr[i] == 1`` means that i is surrounded by</span>
+<span class="sd">        a non-unique location.&quot;&quot;&quot;</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">non_unique_segments</span> <span class="o">=</span> <span class="n">find_non_unique_segments</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">segments_to_array</span><span class="p">(</span><span class="n">non_unique_segments</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_all_forbidden_locations"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_all_forbidden_locations">[docs]</a>    <span class="k">def</span> <span class="nf">compute_all_forbidden_locations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an array indicating which positions should be avoided.</span>
+
+<span class="sd">        We take into account forbidden patterns, user-forbidden locations,</span>
+<span class="sd">        and non-unique locations.</span>
+<span class="sd">        ``arr[i] == 1`` indicates that position i should be avoided in the</span>
+<span class="sd">        record.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">record</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_nonunique_segments_locations</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_forbidden_patterns_locations</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_user_forbidden_locations</span>
+        <span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_sequence_primers"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_sequence_primers">[docs]</a>    <span class="k">def</span> <span class="nf">compute_sequence_primers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return, primers for the sequence, one around each index.</span>
+
+<span class="sd">        The primers are chosen to fit the length and melting temperature</span>
+<span class="sd">        specified by the class parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record</span>
+<span class="sd">          The record in which to list the primers</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        primers</span>
+<span class="sd">          List of primers sequences.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="n">rev_sequence</span> <span class="o">=</span> <span class="n">reverse_complement</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="n">find_best_primer_locations</span><span class="p">(</span>
+            <span class="n">sequence</span><span class="p">,</span>
+            <span class="n">tm_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_range</span><span class="p">,</span>
+            <span class="n">size_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">size_range</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span>
+            <span class="p">[</span>
+                <span class="p">(</span><span class="n">sequence</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span>
+                <span class="p">(</span><span class="n">rev_sequence</span><span class="p">[</span><span class="n">L</span> <span class="o">-</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">L</span> <span class="o">-</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">locations</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">],</span> <span class="p">[])))</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.compute_all_primers_coverage_on_record"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.compute_all_primers_coverage_on_record">[docs]</a>    <span class="k">def</span> <span class="nf">compute_all_primers_coverage_on_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">indices_to_cover</span><span class="p">,</span>
+                                               <span class="n">available_primers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return, for each primer, the list of indices covered in this record.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        record</span>
+<span class="sd">          The record in which to search</span>
+
+<span class="sd">        indices_to_cover</span>
+<span class="sd">          List of indices to cover (defined by the user) in this record.</span>
+
+<span class="sd">        available_primers</span>
+<span class="sd">          List of candidate primers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        primers_coverage</span>
+<span class="sd">          ``{primer_name: list_of_indices_covered_in_this_record}``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="n">forbidden_locations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_all_forbidden_locations</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">sequence_primers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sequence_primers</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">reusable_primers_sequences</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">primer</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">primer</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">primer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">locate_primer_sequence</span><span class="p">(</span><span class="n">primer</span><span class="p">,</span> <span class="n">sequence</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">primer</span> <span class="ow">in</span> <span class="n">available_primers</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="n">primers</span> <span class="o">=</span> <span class="n">reusable_primers_sequences</span> <span class="o">+</span> <span class="n">sequence_primers</span>
+        <span class="n">iter_bar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iter_bar</span>
+        <span class="n">primers_coverages</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">primer</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">strand</span><span class="p">)</span> <span class="ow">in</span> <span class="n">iter_bar</span><span class="p">(</span><span class="n">primer</span><span class="o">=</span><span class="n">primers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">forbidden_locations</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">cond</span><span class="p">(</span><span class="n">primer</span><span class="p">)</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">primers_conditions</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">coverage_start</span> <span class="o">=</span> <span class="n">end</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">coverage_end</span> <span class="o">=</span> <span class="n">end</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coverage_start</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">coverage_end</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">linear</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coverage_start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000</span><span class="p">,</span> <span class="n">coverage_end</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="n">coverage_start</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1000</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">linear</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coverage_end</span> <span class="o">&gt;</span> <span class="n">L</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000</span><span class="p">,</span> <span class="n">coverage_end</span> <span class="o">-</span> <span class="n">L</span><span class="p">,</span> <span class="n">coverage_start</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1000</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">coverage_start</span><span class="p">,</span> <span class="n">coverage_end</span><span class="p">,</span>
+                              <span class="n">coverage_start</span><span class="p">,</span> <span class="n">coverage_end</span><span class="p">)</span>
+            <span class="n">primers_coverages</span><span class="p">[</span><span class="n">primer</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span>
+                <span class="n">indices_to_cover</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indices_to_cover</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">ind</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">c</span> <span class="o">&lt;=</span> <span class="n">ind</span> <span class="o">&lt;=</span> <span class="n">d</span><span class="p">)</span>
+            <span class="p">])</span>
+        <span class="k">return</span> <span class="n">primers_coverages</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.generate_primer_name"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.generate_primer_name">[docs]</a>    <span class="k">def</span> <span class="nf">generate_primer_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="n">available_primers_names</span><span class="o">=</span><span class="p">(),</span>
+                             <span class="n">n_digits</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a suitable primer name, considering existing primer names.</span>
+
+<span class="sd">        The result will be of the form P000425 where &#39;P&#39; is the prefix and</span>
+<span class="sd">        &#39;000425&#39; means that &#39;P000424&#39; was the highest-numbered primer name</span>
+<span class="sd">        sarting with P in the list of available primer names</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prefix</span>
+<span class="sd">          The prefix for the primers name</span>
+
+<span class="sd">        available_primers_names</span>
+<span class="sd">          List of already-allocated primer names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">available_primers_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d+&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">):])</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">index</span> <span class="o">&gt;</span> <span class="n">max_index</span><span class="p">):</span>
+                <span class="n">max_index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">return</span> <span class="n">prefix</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="n">n_digits</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.find_part_name_in_record"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.find_part_name_in_record">[docs]</a>    <span class="k">def</span> <span class="nf">find_part_name_in_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find a part where the sequence appears in the provided record.</span>
+
+<span class="sd">        This is used to provide primers infos (&quot;where does this come from ?&quot;).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sequence</span>
+<span class="sd">          An ATGC string representing a sequence (of a primer)</span>
+
+<span class="sd">        record</span>
+<span class="sd">          A single Biopython records where to find the sequence. The parts</span>
+<span class="sd">          should be marked by features with a qualifier ``{&#39;part&#39;: part_name}``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        part_name, index</span>
+<span class="sd">          The name of the part, and position in the part, where it was found.</span>
+<span class="sd">          If the sequence is found in different parts, only the first find</span>
+<span class="sd">          is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;part&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">qualifiers</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">part_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">qualifiers</span><span class="p">[</span><span class="s1">&#39;part&#39;</span><span class="p">])</span>
+            <span class="n">strand</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">strand</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                                                  <span class="n">f</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+                <span class="n">distance</span> <span class="o">=</span> <span class="p">(</span><span class="n">index</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">strand</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">index</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">part_name</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;The given index </span><span class="si">%d</span><span class="s1"> does not correspond to any part in &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.find_subsequence_in_records"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.find_subsequence_in_records">[docs]</a>    <span class="k">def</span> <span class="nf">find_subsequence_in_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">records</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find a part where the sequence appears in the provided records.</span>
+
+<span class="sd">        This is used to provide primers infos (&quot;where does this come from ?&quot;).</span>
+<span class="sd">        This will look for either the sequence or its reverse-complement.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sequence</span>
+<span class="sd">          An ATGC string representing a sequence (of a primer)</span>
+
+<span class="sd">        records</span>
+<span class="sd">          A list of Biopython records where to find the sequence. The parts</span>
+<span class="sd">          should be marked by features with a qualifier ``{&#39;part&#39;: part_name}``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        part_name, index</span>
+<span class="sd">          The name of the part, and position in the part, where it was found.</span>
+<span class="sd">          If the sequence is found in different parts, only the first find</span>
+<span class="sd">          is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">part_name</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_part_name_in_record</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">reverse_complement</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">part_name</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_part_name_in_record</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence not found in records&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">part_name</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.name_subsequence_in_records"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.name_subsequence_in_records">[docs]</a>    <span class="k">def</span> <span class="nf">name_subsequence_in_records</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write a table of primers with columns &#39;name&#39;, &#39;sequence&#39;, etc.</span>
+
+<span class="sd">        The columns after &#39;sequence&#39; are one column per primer metadata, such</span>
+<span class="sd">        as &#39;available&#39;, &#39;infos&#39;, etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        primers</span>
+<span class="sd">          A list of primers, or list of list, as returned by ``select_primers``</span>
+
+<span class="sd">        csv_path</span>
+<span class="sd">          The path to a csv file to write to. If None, no file is written, only</span>
+<span class="sd">          the pandas dataframe of the table is returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataframe</span>
+<span class="sd">          The pandas dataframe of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">part_name</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_part_name_in_record</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">reverse_complement</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ind</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">part_name</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_part_name_in_record</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence not found in records&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">part_name</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.plot_coverage"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.plot_coverage">[docs]</a>    <span class="k">def</span> <span class="nf">plot_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">,</span> <span class="n">pdf_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot the predicted sequencing coverage for each construct.&quot;&quot;&quot;</span>
+        <span class="c1"># PLOT THE PREDICTED SEQUENCING COVERAGE FOR EACH CONSTRUCT</span>
+
+        <span class="k">with</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">pdf</span><span class="p">:</span>
+            <span class="n">iterator</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Plotting coverages...&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">record</span><span class="p">,</span> <span class="n">primers</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">iter_bar</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="n">iterator</span><span class="p">):</span>
+                <span class="n">matches_set</span> <span class="o">=</span> <span class="n">simulate_sequencing</span><span class="p">(</span>
+                    <span class="n">record</span><span class="p">,</span> <span class="n">primers</span><span class="o">=</span><span class="n">primers</span><span class="p">,</span> <span class="n">read_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">read_range</span><span class="p">,</span>
+                    <span class="n">linear</span><span class="o">=</span><span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">matches_set</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plot_reference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot_coverage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_indices_to_cover</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;#fceddb&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">2000</span><span class="p">)</span>
+                <span class="n">pdf</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.write_records_primers_table"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.write_records_primers_table">[docs]</a>    <span class="k">def</span> <span class="nf">write_records_primers_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">,</span>
+                                    <span class="n">csv_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write a table with columns &#39;construct&#39;,&#39;primers&#39; for this construct.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        selected_primers</span>
+<span class="sd">          The list of list of primers, as returned by the ``select_primers``</span>
+<span class="sd">          method.</span>
+
+<span class="sd">        records</span>
+<span class="sd">          The list of records, as provided to the ``select_primers`` method.</span>
+
+<span class="sd">        sep</span>
+<span class="sd">          The separator between the different primer names in the ``primers``</span>
+<span class="sd">          column. Avoid &#39;;&#39; or &#39;,&#39; as this might be used by the CSV formatter.</span>
+
+<span class="sd">        csv_path</span>
+<span class="sd">          The path to a csv file to write to. If None, no file is written, only</span>
+<span class="sd">          the pandas dataframe of the table is returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataframe</span>
+<span class="sd">          The pandas dataframe of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">([</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;record&#39;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s1">&#39;primers&#39;</span><span class="p">:</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">primers_list</span><span class="p">])</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">record</span><span class="p">,</span> <span class="n">primers_list</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">)</span>
+        <span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;record&#39;</span><span class="p">,</span> <span class="s1">&#39;primers&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">csv_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="PrimerSelector.write_primers_table"><a class="viewcode-back" href="../../ref/PrimerSelector.html#primavera.PrimerSelector.write_primers_table">[docs]</a>    <span class="k">def</span> <span class="nf">write_primers_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">,</span> <span class="n">csv_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write a table of primers with columns &#39;name&#39;, &#39;sequence&#39;, etc.</span>
+
+<span class="sd">        The columns after &#39;sequence&#39; are one column per primer metadata, such</span>
+<span class="sd">        as &#39;available&#39;, &#39;infos&#39;, etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        primers</span>
+<span class="sd">          A list of primers, or list of list, as returned by ``select_primers``</span>
+
+<span class="sd">        csv_path</span>
+<span class="sd">          The path to a csv file to write to. If None, no file is written, only</span>
+<span class="sd">          the pandas dataframe of the table is returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dataframe</span>
+<span class="sd">          The pandas dataframe of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selected_primers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">selected_primers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">selected_primers</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">Primer</span><span class="o">.</span><span class="n">list_to_spreadsheet</span><span class="p">(</span><span class="n">selected_primers</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;available&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">csv_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+    <span class="k">def</span> <span class="nf">write_multifile_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">,</span>
+                               <span class="n">target</span><span class="o">=</span><span class="s1">&#39;@memory&#39;</span><span class="p">):</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">flametree</span><span class="o">.</span><span class="n">file_tree</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_coverage</span><span class="p">(</span>
+            <span class="n">records</span><span class="o">=</span><span class="n">records</span><span class="p">,</span>
+            <span class="n">selected_primers</span><span class="o">=</span><span class="n">selected_primers</span><span class="p">,</span>
+            <span class="n">pdf_path</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="s1">&#39;coverages_plots.pdf&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;wb&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_primers_table</span><span class="p">(</span>
+            <span class="n">selected_primers</span><span class="o">=</span><span class="n">selected_primers</span><span class="p">,</span>
+            <span class="n">csv_path</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="s1">&#39;primers_list.csv&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_records_primers_table</span><span class="p">(</span>
+            <span class="n">records</span><span class="o">=</span><span class="n">records</span><span class="p">,</span>
+            <span class="n">selected_primers</span><span class="o">=</span><span class="n">selected_primers</span><span class="p">,</span>
+            <span class="n">csv_path</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="s1">&#39;primers_per_record.csv&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">root</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Edinburgh Genome Foundry.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

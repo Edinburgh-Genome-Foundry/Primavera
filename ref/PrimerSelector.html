@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PrimerSelector &mdash; Primavera 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/main.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Primavera 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Primavera Reference manual" href="ref.html"/>
+        <link rel="next" title="Primer selection example" href="../examples/primer_selection_example.html"/>
+        <link rel="prev" title="Primavera Reference manual" href="ref.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Primavera
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Primavera</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="ref.html">Primavera Reference manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PrimerSelector</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/primer_selection_example.html">Primer selection example</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Primavera</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="ref.html">Primavera Reference manual</a> &raquo;</li>
+        
+      <li>PrimerSelector</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/ref/PrimerSelector.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="primerselector">
+<h1>PrimerSelector<a class="headerlink" href="#primerselector" title="Permalink to this headline">¶</a></h1>
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+            graph TD
+
+ap[available_primers]
+cafl[compute_all_forbidden_locations]
+cavp[compute_all_valid_primers]
+ccp[compute_coverage_points]
+cfpl[compute_forbidden_patterns_locations]
+cnul[compute_non_unique_locations]
+csp[compute_sequence_primers]
+seq[sequence/record]
+sp[select_primers]
+trlr[tm_range, length_range]
+
+
+seq --&gt;cnul
+cnul --&gt; cafl
+seq --&gt;cfpl
+cfpl --&gt; cafl
+seq --&gt; csp
+trlr --&gt; csp
+csp --&gt;cavp
+cafl--&gt; cavp
+ap --&gt; cavp
+cavp  --&gt;sp
+ccp --&gt; sp
+seq --&gt; ccp
+
+style ap fill:#fff;
+style trlr fill:#fff;
+style seq fill:#fff;
+        </div><dl class="class">
+<dt id="primavera.PrimerSelector">
+<em class="property">class </em><code class="descclassname">primavera.</code><code class="descname">PrimerSelector</code><span class="sig-paren">(</span><em>read_range=(150</em>, <em>800)</em>, <em>size_range=(16</em>, <em>25)</em>, <em>tm_range=(55</em>, <em>70)</em>, <em>primer_conditions=()</em>, <em>primer_reuse_bonus=2</em>, <em>logger='bars'</em>, <em>coverage_resolution=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector" title="Permalink to this definition">¶</a></dt>
+<dd><p>A selector to compute the best primers to sequence a set of constructs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>read_range</strong></p>
+<blockquote>
+<div><p>The experimentally measured range (start, end) so that, when a primer
+anneals in the sequence at index i, the range <code class="docutils literal"><span class="pre">[i</span> <span class="pre">+</span> <span class="pre">start,</span> <span class="pre">i</span> <span class="pre">+</span> <span class="pre">end]</span></code> will
+be correctly sequenced.</p>
+</div></blockquote>
+<p><strong>size_range</strong></p>
+<blockquote>
+<div><p>Size range (min, max) for the size of the primers, in nucleotides.</p>
+</div></blockquote>
+<p><strong>tm_range</strong></p>
+<blockquote>
+<div><p>Acceptable melting temperature range for the primers (in Celsius), as
+computed using the heuristic A/T=2C, G/C=4C</p>
+</div></blockquote>
+<p><strong>primer_conditions</strong></p>
+<blockquote>
+<div><p>A list of functions of the form <code class="docutils literal"><span class="pre">primer_sequence</span> <span class="pre">=&gt;</span> <span class="pre">True/False</span></code>.
+Primers for which at least one condition returns False will not be
+considered.</p>
+</div></blockquote>
+<p><strong>primer_reuse_bonus</strong></p>
+<blockquote>
+<div><p>Weight that the availability of the primer should have in the decision
+to select this primer. A higher value of this parameter leads to
+solutions where a higher less new primershave to be ordered, but more
+sequencing reactions have to be done. Set to e.g. 200 to test if there
+exists solutions involving solely already-available primers.</p>
+</div></blockquote>
+<p><strong>logger</strong></p>
+<blockquote>
+<div><p>Leave to ‘bars’ for default progress-bar logger, to None for no logger,
+or any Proglog ProgressBarLogger object.</p>
+</div></blockquote>
+<p><strong>coverage_resolution</strong></p>
+<blockquote class="last">
+<div><p>When the user provides a record with “cover” features to indicate where
+to cover, the coverage points used by the algorithm are the 1-in-N
+nucleotides along the feature region, where N is this parameter.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span> <span class="o">=</span> <span class="n">PrimerSelector</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selected_primers</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">select_primers</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">available_primers</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span><span class="o">.</span><span class="n">plot_coverage</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">selected_primers</span><span class="p">,</span> <span class="s1">&#39;my_report.pdf&#39;</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_all_forbidden_locations">
+<code class="descname">compute_all_forbidden_locations</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_all_forbidden_locations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_all_forbidden_locations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array indicating which positions should be avoided.</p>
+<p>We take into account forbidden patterns, user-forbidden locations,
+and non-unique locations.
+<code class="docutils literal"><span class="pre">arr[i]</span> <span class="pre">==</span> <span class="pre">1</span></code> indicates that position i should be avoided in the
+record.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_all_primers_coverage_on_record">
+<code class="descname">compute_all_primers_coverage_on_record</code><span class="sig-paren">(</span><em>record</em>, <em>indices_to_cover</em>, <em>available_primers</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_all_primers_coverage_on_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_all_primers_coverage_on_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return, for each primer, the list of indices covered in this record.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>record</strong></p>
+<blockquote>
+<div><p>The record in which to search</p>
+</div></blockquote>
+<p><strong>indices_to_cover</strong></p>
+<blockquote>
+<div><p>List of indices to cover (defined by the user) in this record.</p>
+</div></blockquote>
+<p><strong>available_primers</strong></p>
+<blockquote>
+<div><p>List of candidate primers.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">primers_coverage</p>
+<blockquote class="last">
+<div><p><code class="docutils literal"><span class="pre">{primer_name:</span> <span class="pre">list_of_indices_covered_in_this_record}</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_forbidden_patterns_locations">
+<code class="descname">compute_forbidden_patterns_locations</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_forbidden_patterns_locations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_forbidden_patterns_locations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array where <code class="docutils literal"><span class="pre">arr[i]</span> <span class="pre">==</span> <span class="pre">1</span></code> means that i is surrounded by
+a user-forbidden pattern.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_indices_to_cover">
+<code class="descname">compute_indices_to_cover</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_indices_to_cover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_indices_to_cover" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all indices in the record which should be covered.</p>
+<p>These indices are equidistant points inside the user-defined zones to
+cover in the record.</p>
+<p>The use determines the zones to cover via features of
+type <code class="docutils literal"><span class="pre">misc_feature</span></code> and label ‘cover’.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_nonunique_segments_locations">
+<code class="descname">compute_nonunique_segments_locations</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_nonunique_segments_locations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_nonunique_segments_locations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array where <code class="docutils literal"><span class="pre">arr[i]</span> <span class="pre">==</span> <span class="pre">1</span></code> means that i is surrounded by
+a non-unique location.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_sequence_primers">
+<code class="descname">compute_sequence_primers</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_sequence_primers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_sequence_primers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return, primers for the sequence, one around each index.</p>
+<p>The primers are chosen to fit the length and melting temperature
+specified by the class parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>record</strong></p>
+<blockquote>
+<div><p>The record in which to list the primers</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">primers</p>
+<blockquote class="last">
+<div><p>List of primers sequences.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.compute_user_forbidden_locations">
+<code class="descname">compute_user_forbidden_locations</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.compute_user_forbidden_locations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.compute_user_forbidden_locations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an array where <code class="docutils literal"><span class="pre">arr[i]</span> <span class="pre">==</span> <span class="pre">1</span></code> means that i is surrounded by
+a user-forbidden location.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.find_part_name_in_record">
+<code class="descname">find_part_name_in_record</code><span class="sig-paren">(</span><em>record</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.find_part_name_in_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.find_part_name_in_record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a part where the sequence appears in the provided record.</p>
+<p>This is used to provide primers infos (“where does this come from ?”).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong></p>
+<blockquote>
+<div><p>An ATGC string representing a sequence (of a primer)</p>
+</div></blockquote>
+<p><strong>record</strong></p>
+<blockquote>
+<div><p>A single Biopython records where to find the sequence. The parts
+should be marked by features with a qualifier <code class="docutils literal"><span class="pre">{'part':</span> <span class="pre">part_name}</span></code></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">part_name, index</p>
+<blockquote class="last">
+<div><p>The name of the part, and position in the part, where it was found.
+If the sequence is found in different parts, only the first find
+is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.find_subsequence_in_records">
+<code class="descname">find_subsequence_in_records</code><span class="sig-paren">(</span><em>sequence</em>, <em>records</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.find_subsequence_in_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.find_subsequence_in_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a part where the sequence appears in the provided records.</p>
+<p>This is used to provide primers infos (“where does this come from ?”).
+This will look for either the sequence or its reverse-complement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sequence</strong></p>
+<blockquote>
+<div><p>An ATGC string representing a sequence (of a primer)</p>
+</div></blockquote>
+<p><strong>records</strong></p>
+<blockquote>
+<div><p>A list of Biopython records where to find the sequence. The parts
+should be marked by features with a qualifier <code class="docutils literal"><span class="pre">{'part':</span> <span class="pre">part_name}</span></code></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">part_name, index</p>
+<blockquote class="last">
+<div><p>The name of the part, and position in the part, where it was found.
+If the sequence is found in different parts, only the first find
+is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.generate_primer_name">
+<code class="descname">generate_primer_name</code><span class="sig-paren">(</span><em>prefix='P'</em>, <em>available_primers_names=()</em>, <em>n_digits=6</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.generate_primer_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.generate_primer_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a suitable primer name, considering existing primer names.</p>
+<p>The result will be of the form P000425 where ‘P’ is the prefix and
+‘000425’ means that ‘P000424’ was the highest-numbered primer name
+sarting with P in the list of available primer names</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>prefix</strong></p>
+<blockquote>
+<div><p>The prefix for the primers name</p>
+</div></blockquote>
+<p><strong>available_primers_names</strong></p>
+<blockquote class="last">
+<div><p>List of already-allocated primer names</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="primavera.PrimerSelector.locate_primer_sequence">
+<em class="property">static </em><code class="descname">locate_primer_sequence</code><span class="sig-paren">(</span><em>primer</em>, <em>sequence</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.locate_primer_sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.locate_primer_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the location (start, end, strand) of a primer in the sequence.</p>
+<p>Return None if the primer sequence and its reverse complement are not
+found in the sequence.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.name_subsequence_in_records">
+<code class="descname">name_subsequence_in_records</code><span class="sig-paren">(</span><em>sequence</em>, <em>records</em>, <em>prefix='P'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.name_subsequence_in_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.name_subsequence_in_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a table of primers with columns ‘name’, ‘sequence’, etc.</p>
+<p>The columns after ‘sequence’ are one column per primer metadata, such
+as ‘available’, ‘infos’, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>primers</strong></p>
+<blockquote>
+<div><p>A list of primers, or list of list, as returned by <code class="docutils literal"><span class="pre">select_primers</span></code></p>
+</div></blockquote>
+<p><strong>csv_path</strong></p>
+<blockquote>
+<div><p>The path to a csv file to write to. If None, no file is written, only
+the pandas dataframe of the table is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dataframe</p>
+<blockquote class="last">
+<div><p>The pandas dataframe of the table.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.plot_coverage">
+<code class="descname">plot_coverage</code><span class="sig-paren">(</span><em>records</em>, <em>selected_primers</em>, <em>pdf_path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.plot_coverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.plot_coverage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the predicted sequencing coverage for each construct.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.select_primers">
+<code class="descname">select_primers</code><span class="sig-paren">(</span><em>records</em>, <em>available_primers=()</em>, <em>new_primers_prefix='P'</em>, <em>new_primers_digits=6</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.select_primers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.select_primers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select primers to sequence the given records.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>records</strong></p>
+<blockquote>
+<div><p>A list of biopython records to sequence. The zones to cover in the
+record should be indicated by a feature of type <code class="docutils literal"><span class="pre">misc_feature</span></code> and
+label <code class="docutils literal"><span class="pre">cover</span></code>. The zones where no primers are desired should be
+indicated by a feature of type <code class="docutils literal"><span class="pre">misc_feature</span></code> and label
+<code class="docutils literal"><span class="pre">no_primer</span></code>.</p>
+</div></blockquote>
+<p><strong>available_primers</strong></p>
+<blockquote>
+<div><p>List of Primer objects representing the available primers.</p>
+</div></blockquote>
+<p><strong>new_primers_prefix</strong></p>
+<blockquote>
+<div><p>Prefix to use for names of the new primers</p>
+</div></blockquote>
+<p><strong>new_primers_digits</strong></p>
+<blockquote>
+<div><p>The new primers will have names of the form P000435, with a number
+of digits provided by this parameter.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">selected_primers</p>
+<blockquote class="last">
+<div><p>A list of lists of primers, one list of primers for each consrtruct.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.write_primers_table">
+<code class="descname">write_primers_table</code><span class="sig-paren">(</span><em>selected_primers</em>, <em>csv_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.write_primers_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.write_primers_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a table of primers with columns ‘name’, ‘sequence’, etc.</p>
+<p>The columns after ‘sequence’ are one column per primer metadata, such
+as ‘available’, ‘infos’, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>primers</strong></p>
+<blockquote>
+<div><p>A list of primers, or list of list, as returned by <code class="docutils literal"><span class="pre">select_primers</span></code></p>
+</div></blockquote>
+<p><strong>csv_path</strong></p>
+<blockquote>
+<div><p>The path to a csv file to write to. If None, no file is written, only
+the pandas dataframe of the table is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dataframe</p>
+<blockquote class="last">
+<div><p>The pandas dataframe of the table.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="primavera.PrimerSelector.write_records_primers_table">
+<code class="descname">write_records_primers_table</code><span class="sig-paren">(</span><em>selected_primers</em>, <em>records</em>, <em>sep='|'</em>, <em>csv_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/primavera/PrimerSelector.html#PrimerSelector.write_records_primers_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#primavera.PrimerSelector.write_records_primers_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a table with columns ‘construct’,’primers’ for this construct.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>selected_primers</strong></p>
+<blockquote>
+<div><p>The list of list of primers, as returned by the <code class="docutils literal"><span class="pre">select_primers</span></code>
+method.</p>
+</div></blockquote>
+<p><strong>records</strong></p>
+<blockquote>
+<div><p>The list of records, as provided to the <code class="docutils literal"><span class="pre">select_primers</span></code> method.</p>
+</div></blockquote>
+<p><strong>sep</strong></p>
+<blockquote>
+<div><p>The separator between the different primer names in the <code class="docutils literal"><span class="pre">primers</span></code>
+column. Avoid ‘;’ or ‘,’ as this might be used by the CSV formatter.</p>
+</div></blockquote>
+<p><strong>csv_path</strong></p>
+<blockquote>
+<div><p>The path to a csv file to write to. If None, no file is written, only
+the pandas dataframe of the table is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dataframe</p>
+<blockquote class="last">
+<div><p>The pandas dataframe of the table.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../examples/primer_selection_example.html" class="btn btn-neutral float-right" title="Primer selection example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ref.html" class="btn btn-neutral" title="Primavera Reference manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Edinburgh Genome Foundry.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
