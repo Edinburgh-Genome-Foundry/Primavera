@@ -80,11 +80,13 @@ class PrimerSelector:
     def __init__(self, read_range=(150, 800), size_range=(16, 25),
                  tm_range=(55, 70), primer_conditions=(),
                  primer_reuse_bonus=2, logger='bars',
+                 nucleotide_resolution=1,
                  coverage_resolution=5):
         self.read_range = read_range
         self.size_range = size_range
         self.tm_range = tm_range
         self.primers_conditions = primer_conditions
+        self.nucleotide_resolution = nucleotide_resolution
         self.coverage_resolution = coverage_resolution
         self.primer_reuse_bonus = 2
         if logger == 'bars':
@@ -305,7 +307,7 @@ class PrimerSelector:
         )))
 
     def compute_sequence_primers(self, record):
-        """Return, primers for the sequence, one around each index.
+        """Return primers for the sequence, one around each index.
 
         The primers are chosen to fit the length and melting temperature
         specified by the class parameters.
@@ -329,6 +331,8 @@ class PrimerSelector:
             tm_range=self.tm_range,
             size_range=self.size_range
         )
+        if self.nucleotide_resolution > 1:
+            locations = locations[::self.nucleotide_resolution]
         return list(set(sum([
             [
                 (sequence[l[0]: l[1]], (l[0], l[1], 1)),
