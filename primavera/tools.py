@@ -1,8 +1,10 @@
 import numpy as np
 
-def minimal_cover(elements_set, subsets, max_subsets=None, heuristic='default',
-                  selected=(), depth=0):
-    """
+def minimal_cover(elements_set, subsets, heuristic='default',
+                  selected=(), extended_elements_set=None, depth=0):
+    """Specific version of the "minimal subset cover greedy solution".
+
+    This version allows for primary/extended coverage subsets (more doc later)
 
     Parameters
     ----------
@@ -11,9 +13,6 @@ def minimal_cover(elements_set, subsets, max_subsets=None, heuristic='default',
 
     subsets
       A list of (name, subset)
-
-    max_subsets
-      Maximal number of subsets allowed
 
     heuristic
       A function ``((name, subset), selected) => value`` where ``name`` is the
@@ -32,55 +31,47 @@ def minimal_cover(elements_set, subsets, max_subsets=None, heuristic='default',
       None if no solution was found, else a collection of [(name, subset)...]
       in the order in which the subsets
     """
-
-    if len(elements_set) == 0:
-        return []
-    if max_subsets == 0:
-        return None
-
     if depth == 0:
-        full_set = set().union(*[subset for name, subset in subsets])
+        full_set = set().union(*[
+            subset['extended']
+            for name, subset in subsets
+        ])
         if full_set != elements_set:
-            return None
-
-    subsets = [(n, s) for (n, s) in subsets if len(s)]
+            return ValueError('No full coverage solution exists !')
+    if extended_elements_set is None:
+        extended_elements_set = elements_set.union({})
+    if (len(extended_elements_set) == 0) or (len(elements_set) == 0):
+        return []
+    subsets = list(subsets)
+    subsets = [(n, s) for (n, s) in subsets if len(s['primary'])]
 
     def sorting_heuristic(named_subset):
-        name, subset = named_subset
         if (heuristic == 'default'):
-            return len(subset)
+            return len(named_subset[1]['primary'])
         else:
             return heuristic(named_subset, selected)
 
     ordered_subsets = sorted(subsets, key=sorting_heuristic)
 
-    while len(ordered_subsets):
-        if max_subsets is not None:
-            critical_subset_length = len(elements_set) / max_subsets
-            max_len = max(len(s) for name, s in ordered_subsets)
-            if max_len < critical_subset_length:
-                return None
-        name, subset = ordered_subsets.pop()
-        new_elements_set = elements_set.difference(subset)
-        new_subsets = [
-            (name_, sub.difference(subset))
-            for (name_, sub) in ordered_subsets
-        ]
-        new_max_subsets = None if (max_subsets is None) else max_subsets - 1
-        result = minimal_cover(new_elements_set, new_subsets,
-                               heuristic=heuristic,
-                               selected=list(selected) + [subset],
-                               max_subsets=new_max_subsets,
-                               depth=depth + 1)
-        if result is not None:
-            return result + [name]
-        ordered_subsets = [
-            subset_
-            for (subset_, (new_name, new_subset)) in zip(ordered_subsets,
-                                                         new_subsets)
-            if len(new_subset) != 0
-        ]
-    return None
+    name, subset = ordered_subsets.pop()
+    # print (name, len(subset['primary']))
+    primary, extended = subset['primary'], subset['extended']
+    new_elements_set = elements_set.difference()
+    new_extended_elements_set = extended_elements_set.difference(extended)
+    new_subsets = [
+        (name_, {'primary': sub['primary'].difference(primary),
+                 'extended': sub['extended'].difference(extended)})
+        for (name_, sub) in ordered_subsets
+    ]
+    return [name] + minimal_cover(
+        new_elements_set, new_subsets,
+        heuristic=heuristic,
+        selected=list(selected) + [subset],
+        extended_elements_set=new_extended_elements_set,
+        depth=depth + 1
+)
+
+
 
 def segments_to_array(segments, array_length):
     array = np.zeros(array_length)

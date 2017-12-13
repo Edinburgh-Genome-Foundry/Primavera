@@ -122,11 +122,12 @@ class SequenceMatch:
         return "Match(%d, %d, %d, %s)" % (self.start, self.end, self.strand,
                                           self.percent)
 
-    def to_Biopython_feature(self):
+    def to_biopython_feature(self):
         return SeqFeature(
             location=FeatureLocation(self.start, self.end, self.strand),
             type="misc_feature",
-            qualifiers={"label": self.percent}
+            qualifiers={"label": self.percent},
+            strand=self.strand
         )
 
 
@@ -231,36 +232,39 @@ class ReadReferenceMatches:
         else:
             return [m.start for m in self.primer_matches]
 
-    def matches_as_Biopython_features(self):
+    def matches_as_biopython_features(self):
         """Return a list of the matches as Biopython features"""
         result = []
         for m in self.read_matches:
-            feature = m.to_Biopython_feature()
+            feature = m.to_biopython_feature()
             if self.primer is not None:
                 feature.qualifiers["primer"] = self.primer.name
+                feature.qualifiers["label"] = self.primer.name + ' read'
             result.append(feature)
         for m in self.primer_matches:
-            feature = m.to_Biopython_feature()
+            feature = m.to_biopython_feature()
             if self.primer is not None:
                 feature.qualifiers["label"] = self.primer.name
             result.append(feature)
         return result
 
-    def to_SeqRecord(self):
+    def to_biopython_record(self, record_id=None):
         """Return a Biopython Seqrecord with the matches as annotations.
 
         The record also features the reference's features.
 
         """
         record = deepcopy(self.reference)
-        record.features += self.matches_as_Biopython_features()
+        record.features += self.matches_as_biopython_features()
+        if record_id is not None:
+            record.id = record_id
         return record
 
     def to_genbank(self, filename):
         """Write the Genbank record with the matches as annotations.
         The record also features the reference's features.
         """
-        SeqIO.write(self.to_SeqRecord(), filename, "genbank")
+        SeqIO.write(self.to_biopython_record(), filename, "genbank")
 
 
 class ReadReferenceMatchesSet:
@@ -555,14 +559,16 @@ class ReadReferenceMatchesSet:
             linear=self.linear
         )
 
-    def to_SeqRecord(self):
+    def to_biopython_record(self, record_id=None):
         """Return a Biopython Seqrecord with the matches as annotations.
 
         The record also features the reference's features.
         """
         record = deepcopy(self.reference)
         for _, matches in self.read_reference_matches.items():
-            record.features += matches.matches_as_Biopython_features()
+            record.features += matches.matches_as_biopython_features()
+        if record_id is not None:
+            record.id = record_id
         return record
 
     def to_genbank(self, filename):
@@ -570,6 +576,6 @@ class ReadReferenceMatchesSet:
         The record also features the reference's features.
         """
         print (filename)
-        record = self.to_SeqRecord()
+        record = self.to_biopython_record()
         record.features = [f for f in record.features if f.location is not None]
         SeqIO.write(record, filename, "genbank")

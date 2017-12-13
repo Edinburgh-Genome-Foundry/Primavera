@@ -45,7 +45,7 @@ def reverse_complement(sequence):
 def blast_sequences(sequences=None, fasta_file=None,
                     blast_db=None, subject=None, word_size=4,
                     perc_identity=80, num_alignments=1000, num_threads=3,
-                    use_megablast=True, ungapped=True):
+                    use_megablast=True, evalue=None, ungapped=True):
     """Return a Biopython BLAST record of the given sequence BLASTed
     against the provided database.
 
@@ -127,6 +127,7 @@ def blast_sequences(sequences=None, fasta_file=None,
         (["-db", blast_db] if blast_db is not None
          else ['-subject', subject]) +
         (["-ungapped"] if ungapped else []) +
+        (["-evalue", str(evalue)] if evalue else []) +
         (["-task", "megablast"] if use_megablast else []) + [
         "-word_size", str(word_size),
         "-num_threads", str(num_threads),
@@ -247,7 +248,7 @@ def find_best_primer_locations(sequence, size_range=(15, 25),
 def find_non_unique_segments(sequence, perc_identity=80):
     blast_record = blast_sequences(sequence, subject=sequence,
                                    perc_identity=perc_identity,
-                                   ungapped=False, word_size=7)[0]
+                                   ungapped=False, word_size=4)[0]
     segments_with_alignments = sorted(set([
         (h.query_start, h.query_end)
         for al in blast_record.alignments
