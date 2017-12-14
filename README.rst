@@ -1,10 +1,9 @@
-.. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/title.png
-   :alt: [logo]
-   :align: center
-   :width: 600px
+.. raw:: html
 
-Primavera
-==========
+    <p align="center">
+    <img alt="Primavera Logo" title="Primavera Logo" src="https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/title.png" width="550">
+    <br /><br />
+    </p>
 
 .. image:: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera.svg?branch=master
    :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera
