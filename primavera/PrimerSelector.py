@@ -687,6 +687,29 @@ class PrimerSelector:
 
     def write_multifile_report(self, records, selected_primers,
                                target='@memory'):
+        """Plot a full report in a folder or zip or in memory.
+
+        The report contains:
+        - A PDF 'coverages_plots.pdf', where each page shows how one construct
+          should be covered by the primers' respective sequencing.
+        - A spreadsheet 'primers_list.csv' indicating for each primer its
+          sequence and whether it is already available.
+        - A spreadsheet indicating, for each construct,
+
+        Parameters
+        -----------
+
+        records
+          A list of construct records
+
+        selected_primers
+          A list of list of primers (one list for each record)
+
+        target
+          Either the path to a directory or zip, or "@memory" to return a
+          bytestring of binary data representing the zip file.
+
+        """
         root = flametree.file_tree(target)
         self.plot_coverage(
             records=records,
@@ -701,5 +724,4 @@ class PrimerSelector:
             selected_primers=selected_primers,
             csv_path=root._file('primers_per_record.csv')
         )
-
         return root._close()

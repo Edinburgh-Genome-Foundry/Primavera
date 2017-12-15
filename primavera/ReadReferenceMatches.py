@@ -29,11 +29,19 @@ class SequencingRead:
     read_sequence
       An ATGC string
 
+    read_qualities
+      A sequence of numbers between 0 and 1 (CHECK), as long as the
+      read_sequence, representing the confidence for each nucleotide read.
+
+    primer
+
+
 
     """
 
     def __init__(self, read_name=None, read_sequence=None, read_qualities=None,
                  primer=None):
+        """Initialize"""
         self.read_name = read_name
         self.primer = primer
         self.read_sequence = read_sequence
@@ -42,6 +50,7 @@ class SequencingRead:
                                 np.mean(read_qualities))
 
     def __hash__(self):
+        """Return the name, which we assume unique."""
         return self.name
 
     @staticmethod
@@ -215,16 +224,20 @@ class ReadReferenceMatches:
 
     @property
     def longest_match_size(self):
+        """Return the length of the longest read match/ungapped alignment."""
         if len(self.read_matches) == 0:
             return 0
         return max(len(match) for match in self.read_matches)
 
     @property
     def total_matches_length(self):
+        """Return the total length of read matches/ungapped alignments."""
         return sum([len(match) for match in self.read_matches])
 
     @property
     def primer_start(self):
+        """Return the location(s) in the sequence where the primer matches.
+        None if no match, an index if one match, or a list of indices."""
         if len(self.primer_matches) == 0:
             return None
         if len(self.primer_matches) == 1:
@@ -292,6 +305,13 @@ class ReadReferenceMatchesSet:
                 self.coverage[inds] += 1
 
     def rotated(self, n_bases="auto"):
+        """Return a new ReadReferenceMatchesSet with rotated sequence.
+
+        This is practical to visualize primer alignments on a circular record
+        where the alignments appear in the middle of the picture, instead of
+        being cut at the border. Leave n_bases to "auto" for automatically
+        deciding which rotation gives best results.
+        """
         if n_bases == "auto":
             nz = np.nonzero(np.hstack([self.coverage, self.coverage]))[0]
             if len(nz) > 0:
@@ -310,6 +330,8 @@ class ReadReferenceMatchesSet:
     def from_reads(reference, reads, perc_identity=98,
                    primer_perc_identity=95, min_match_length=20,
                    max_read_length=1000, linear=True):
+        """
+        """
         reference_sequence = (reference if isinstance(reference, str) else
                               str(reference.seq))
         reads = deepcopy(reads)
@@ -416,7 +438,41 @@ class ReadReferenceMatchesSet:
         Parameters
         ----------
 
-        ax
+        ax=None
+          Matplotlib ax on which to plot the alignments. If None, one will be
+          automatically created.
+
+        plot_coverage
+          If True, the plots will display in the background a filled blue line
+          indicating how many times each nucleotide of the sequence is covered
+          by the succesfull alignments.
+
+        plot_reference
+          If True, a schema of the reference record will be plotted, by default
+          above the reads plot.
+
+        reference_ax
+          If provided and plot_reference is True, the reference record will be
+          plotted on this ax.
+
+        figsize
+          Size of the final figure. Leave it to 'auto' for a figure of width
+          12 and automatically chosen height. Or e.g. (16, 'auto') for a figure
+          of width 12 and automatically chosen height
+
+        features_filters
+          List of functions (feature=>True/False). Features for which at least
+          one test is False will not appear in the reference record plot.
+
+        features_properties
+          DNA Features Viewer property functions that can be used to change
+          the appearance of the reference record.
+
+        reference_reads_shares
+          Relative shares of the pictures that should be occupied by the
+          reference and by the reads. It is an experimental parameter so
+          leave it to 'auto' for now.
+
         """
 
         class AnnotationsGraphicTranslator(BiopythonTranslator):

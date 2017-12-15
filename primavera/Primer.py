@@ -20,11 +20,17 @@ class Primer:
 
 
     def __init__(self, name=None, sequence=None, metadata=None):
+        """Initialize"""
         self.name = name
         self.sequence = sequence
         self.metadata = {} if metadata is None else metadata
 
     def find_location(self, sequence):
+        """Return the (start, end, strand) of the primer in the sequence.
+
+        The convention is that always (start < end), the strand indicates
+        the direction of the homology.
+        """
         ind = sequence.find(self.sequence)
         strand = 1
         if ind == -1:
@@ -32,6 +38,7 @@ class Primer:
             if ind == -1:
                 return None
             else:
+                ind = len(sequence) - ind - len(self.sequence)
                 strand = -1
         start, end = ind, ind + len(self.sequence)
         return start, end, strand
@@ -41,6 +48,7 @@ class Primer:
 
     @staticmethod
     def list_from_fasta(fasta_file):
+        """Return a list of Primer objects, by reading a FASTA file."""
         records = SeqIO.parse(fasta_file, 'fasta')
         return [
             Primer(name=rec.name, sequence=str(rec.seq))
@@ -49,6 +57,7 @@ class Primer:
 
     @staticmethod
     def list_to_fasta(primers_list, filepath=None):
+        """Write a FASTA file from a list of Primer objects."""
         fasta = "\n\n".join([
             ">%s\n%s" % (primer.name, primer.sequence)
             for primer in primers_list
@@ -60,6 +69,9 @@ class Primer:
 
     @staticmethod
     def list_from_spreadsheet(dataframe=None, filepath=None):
+        """Return a list of Primer objects from a spreadsheet.
+
+        The spreadsheet should have columns name/sequence."""
         if dataframe is None:
             if filepath.lower().endswith('csv'):
                 dataframe = pandas.read_csv(filepath)
@@ -75,6 +87,7 @@ class Primer:
 
     @staticmethod
     def list_to_spreadsheet(primers_list, filepath=None):
+        """Convert a list of Primer objects to a spreadsheet."""
 
         dataframe = pandas.DataFrame.from_records(
             columns=['name', 'sequence'] + sorted(set(
