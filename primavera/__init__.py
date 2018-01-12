@@ -7,6 +7,7 @@ from .ReadReferenceMatches import (ReadReferenceMatches, SequencingRead,
 from .Primer import Primer
 from .SequencingReportGenerator import (SequencingReportGenerator,
                                         PrimersFastaSource,
+                                        PrimersSpreadsheetSource,
                                         ConstructsFolderSource)
 from .sequencing_simulation import simulate_sequencing
 from .PrimerSelector import PrimerSelector

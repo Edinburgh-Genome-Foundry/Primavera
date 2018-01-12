@@ -6,7 +6,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 from flametree import file_tree
-from .ReadReferenceMatches import SequencingRead, ReadReferenceMatches
+from .ReadReferenceMatches import SequencingRead, ReadReferenceMatchesSet
 from .Primer import Primer
 
 
@@ -30,6 +30,21 @@ class PrimersFastaSource(Source):
         self.primers_dict = {
             self.sanitize_name(primer.name): primer
             for primer in Primer.list_from_fasta(fasta_file)
+        }
+        self.get = self.primers_dict.get
+
+class PrimersSpreadsheetSource(Source):
+    """Primer source using a spreadsheet for primers names and sequences."""
+
+    def __init__(self, spreadsheet):
+        self.spreadsheet = spreadsheet
+        if isinstance(spreadsheet, str):
+            primers_list = Primer.list_from_spreadsheet(filepath=spreadsheet)
+        else:
+            primers_list = Primer.list_from_spreadsheet(dataframe=spreadsheet)
+        self.primers_dict = {
+            self.sanitize_name(primer.name): primer
+            for primer in primers_list
         }
         self.get = self.primers_dict.get
 
@@ -58,20 +73,20 @@ class SequencingReportGenerator:
         self.constructs_source = constructs_source
         self.default_linearity = default_linearity
 
-    def get_primer_and_construct_names(self, filename):
-        """Assume sequencing filenames of the form construct_primer_xxx.ab1"""
+    def get_read_infos(self, filename):
+        """Return clone_id, primer_name, construct_name from the filename."""
         return filename.split("_")[:2]
 
     def classify_reads(self, reads):
         """Return a dict {construct_id: [associated_reads]}."""
         classified_reads = defaultdict(lambda *a: [])
         for read in reads:
-            primer_name, construct_name = \
-                self.get_primer_and_construct_names(read.read_name)
+            clone_id, primer_name, construct_name = \
+                self.get_read_infos(read.read_name)
             read.primer = self.primers_source(primer_name)
 
-            classified_reads[construct_name].append(read)
-        for construct, seqlist in classified_reads.items():
+            classified_reads[clone_id].append(read)
+        for clone, seqlist in classified_reads.items():
             seqlist.sort(key=lambda r: r.primer.name)
         self.classified_reads = classified_reads
         return classified_reads
@@ -105,21 +120,23 @@ class SequencingReportGenerator:
 
         root = file_tree(target, replace=replace)
 
-        for construct_name, reads in classified_reads.items():
+        for clone_id, reads in classified_reads.items():
+            _, _, construct_name = self.get_read_infos(reads[0].read_name)
             construct = self.constructs_source(construct_name)
             if construct is None:
-                errors.append(construct_name + " unknown")
+                errors.append(construct_name + ": unknown construct")
                 continue
             linear = construct.__dict__.get('linear', self.default_linearity)
             matches_set = ReadReferenceMatchesSet.from_reads(
                 construct, reads, perc_identity=perc_identity, linear=linear
             )
-            self.plot_matches_set(matches_set, title=construct_name,
-                                  filepath=root._file(construct_name + ".png"))
-            matches_set.to_genbank(root._file(construct_name + ".gb"))
+            self.plot_matches_set(matches_set, title=clone_id,
+                                  filepath=root._file(clone_id + ".png"))
+            matches_set.to_genbank(root._file(clone_id + ".gb"))
             records += [
                 dict(
                     read=read_name,
+                    clone_id=clone_id,
                     construct=construct_name,
                     primer=matches.primer.name,
                     primer_position=matches.primer_start,
@@ -130,7 +147,7 @@ class SequencingReportGenerator:
                     read_length=len(matches.read.read_qualities)
                 )
                 for read_name, matches in
-                sorted(matches_set.sequencing_matches.items())
+                sorted(matches_set.read_reference_matches.items())
             ]
         columns = ["read", "construct", "primer", "primer_position",
                    "longest_match", "total_matches_length",

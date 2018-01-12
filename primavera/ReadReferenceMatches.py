@@ -438,7 +438,7 @@ class ReadReferenceMatchesSet:
         Parameters
         ----------
 
-        ax=None
+        ax
           Matplotlib ax on which to plot the alignments. If None, one will be
           automatically created.
 
@@ -631,7 +631,6 @@ class ReadReferenceMatchesSet:
         """Write the Genbank record with the matches as annotations.
         The record also features the reference's features.
         """
-        print (filename)
         record = self.to_biopython_record()
         record.features = [f for f in record.features if f.location is not None]
         SeqIO.write(record, filename, "genbank")

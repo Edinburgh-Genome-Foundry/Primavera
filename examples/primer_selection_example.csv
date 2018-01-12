@@ -1,0 +1,21 @@
+name,sequence,available,infos
+P000001,GAACACAGGGTGCGGCCTG,False,From part part-J (at position 74)
+P000002,CACAGAAGAAAAGAGGCTATTA,False,From part part-Q (at position 662)
+P000003,ATTCTGGGGTCCACAGCATT,False,From part part-C (at position 1122)
+P000004,TCGCGACCGGGGGAAAGTG,False,From part part-N (at position 283)
+P000005,CCTTCTCCACCCATCTTCAAC,False,From part part-O (at position 291)
+P000006,TGATCATGAACGTCTGAGCGTA,False,From part part-G (at position 1093)
+P000007,ACATGTAGCTAATTTTAGCAATAAA,False,From part part-B (at position 461)
+P000008,GTATATTGGACAGTTGATAGGAC,False,From part part-J (at position 238)
+P000009,CACTCTGCTGTTCATTGGCC,False,From part part-H (at position 729)
+P000010,TACGACAAAAACTGGCTAGGTC,False,From part part-P (at position 96)
+P000011,GGTCTTACGCTGACTAGTATCG,False,From part part-O (at position 948)
+P000012,GTTATGATCGAGTTGATTTATAAA,False,From part part-M (at position 881)
+P000013,TCTAATCGGAGCGTGACACT,False,From part part-T (at position 586)
+P000014,CGTGGCACCGCCTGTCAAG,False,From part part-T (at position 111)
+P000015,AAGCCGTGGCCCTAAGGAT,False,From part part-T (at position 137)
+P000016,ATCCACTCTCTAAGCTACTGG,False,From part part-H (at position 920)
+available_primer_016,AAATTTAGTGGTCGTGCTTT,True,
+available_primer_018,AAATATACGAAAGTACAC,True,
+available_primer_024,TAATACATATACAGGATG,True,
+available_primer_032,CCCGTGTAACCCTCATGCCCGCT,True,

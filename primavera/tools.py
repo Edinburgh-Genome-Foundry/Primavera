@@ -54,7 +54,6 @@ def minimal_cover(elements_set, subsets, heuristic='default',
     ordered_subsets = sorted(subsets, key=sorting_heuristic)
 
     name, subset = ordered_subsets.pop()
-    # print (name, len(subset['primary']))
     primary, extended = subset['primary'], subset['extended']
     new_elements_set = elements_set.difference()
     new_extended_elements_set = extended_elements_set.difference(extended)
