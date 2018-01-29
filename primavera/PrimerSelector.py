@@ -211,6 +211,7 @@ class PrimerSelector:
 
         # CHOOSE A MINIMAL PRIMER COVER FOR EACH CONSTRUCT
         per_record_primers = []
+        self.logger(message='Finding minimal covers for each construct')
         for record in self.logger.iter_bar(record=records):
             elements = set(indices_to_cover[record.id].values())
             subcovers = {
@@ -589,7 +590,7 @@ class PrimerSelector:
         # PLOT THE PREDICTED SEQUENCING COVERAGE FOR EACH CONSTRUCT
 
         with PdfPages(pdf_path) as pdf:
-            iterator = zip(records, selected_primers)
+            iterator = list(zip(records, selected_primers))
             self.logger(message='Plotting coverages...')
             for record, primers in self.logger.iter_bar(record=iterator):
                 matches_set = simulate_sequencing(
