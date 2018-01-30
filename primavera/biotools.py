@@ -162,8 +162,6 @@ def blast_sequences(sequences=None, fasta_file=None,
             time.sleep(0.1)
         else:
             break
-    else:
-        print("temp file may not be closed correctly")
     return res
 
 
