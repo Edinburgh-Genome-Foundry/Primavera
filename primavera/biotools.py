@@ -101,6 +101,7 @@ def blast_sequences(sequences=None, fasta_file=None,
             f.write(">%s\n%s\n" % (name, seq))
 
     remove_subject = True
+    close_subject = False
     if subject is not None:
         close_subject = True
         if isinstance(subject, str):
@@ -132,30 +133,38 @@ def blast_sequences(sequences=None, fasta_file=None,
         "-word_size", str(word_size),
         "-num_threads", str(num_threads),
         "-perc_identity", str(perc_identity)
-    ], close_fds=True, stderr=subprocess.PIPE)
+    ], close_fds=True)
     res, blast_err = p.communicate()
-    p.wait()
     error = None
     for i in range(3):
         try:
             with open(xml_name, "r") as f:
                 res = list(NCBIXML.parse(f))
-                os.fdopen(xml_file, 'w').close()
-                os.fdopen(fasta_file, 'w').close()
-                os.remove(xml_name)
-                os.remove(fasta_name)
-
-                if close_subject:
-                    open(subject, 'w').close()
-                    if remove_subject:
-                        os.remove(subject)
-                return res
-            break
         except ValueError as err:
             error = err
             time.sleep(0.1)
+        else:
+            break
     else:
         raise ValueError("Problem reading the blast record: " + str(error))
+    for j in range(3):
+        try:
+            os.fdopen(xml_file, 'w').close()
+            os.fdopen(fasta_file, 'w').close()
+            os.remove(xml_name)
+            os.remove(fasta_name)
+            if close_subject:
+                open(subject, 'w').close()
+                if remove_subject:
+                    os.remove(subject)
+        except IOError as err:
+            error = err
+            time.sleep(0.1)
+        else:
+            break
+    else:
+        print("temp file may not be closed correctly")
+    return res
 
 
 # RETIRING THIS ONE ASAP:
