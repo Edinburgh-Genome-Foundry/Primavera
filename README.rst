@@ -57,7 +57,7 @@ The returned ``selected_primers`` contains a list of lists of primers (one list 
 Installation
 -------------
 
-(Soon) You can install Primavera through PIP
+You can install Primavera through PIP
 
 .. code::
 
