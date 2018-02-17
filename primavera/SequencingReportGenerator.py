@@ -2,6 +2,7 @@
 
 import os
 from collections import defaultdict
+import flametree
 
 import matplotlib.pyplot as plt
 from Bio import SeqIO
@@ -55,12 +56,14 @@ class ConstructsFolderSource(Source):
     def __init__(self, dirs, extensions=("gb", "gbk"), file_format="genbank"):
         self.records = {}
         for c_folder in dirs:
+            root = flametree.file_tree(c_folder)
             self.records.update({
-                self.sanitize_name(name):
-                    SeqIO.read(os.path.join(c_folder, name), file_format)
-                for name in os.listdir(c_folder)
-                if os.path.splitext(name)[1][1:] in extensions
+                self.sanitize_name(f._name_no_extension):
+                    SeqIO.read(f._path, file_format)
+                for f in root._all_files
+                if f._extension in extensions
             })
+        print (len(self.records))
         self.get = self.records.get
 
 

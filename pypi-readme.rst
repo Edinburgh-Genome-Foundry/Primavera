@@ -1,24 +1,10 @@
-.. raw:: html
-
-    <p align="center">
-    <img alt="Primavera Logo" title="Primavera Logo" src="https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/title.png" width="550">
-    <br /><br />
-    </p>
-
-.. image:: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera.svg?branch=master
-   :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera
-   :alt: Travis CI build status
-
-(documentation under construction)
+Primavera
+==========
 
 Primavera is a Python library to plan and analyze primer-based verification of DNA assemblies, using Sanger sequencing or verification PCR. It implements methods to design and select primers to ensure that the relevant assembly segments will be covered, and can generate simple (but approximative) plots summarizing the results of a batch of Sanger sequencing.
 
-You can see a live-demo for primer selection `here <http://cuba.genomefoundry.org/select_primers>`_.
-
-Usage
------
-
-**Primer selection**
+Primer selection example
+-------------------------
 
 The following code assumes that a file ``available_primers.fa`` contains the labels and sequences of all available primers in the lab, and that the assemblies to be sequence-verified have annotations indicating the zones that the sequencing should cover and zones where primer annealing should be avoided.
 
@@ -48,31 +34,30 @@ The returned ``selected_primers`` contains a list of lists of primers (one list 
 .. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/annotated_primer_selection.png
    :width: 600px
 
-**Sequencing Validation**
 
-(documentation for this feature is coming soon)
+Infos
+-----
 
+**PIP installation:**
 
+.. code:: bash
 
-Installation
--------------
+ pip install primavera
 
-(Soon) You can install Primavera through PIP
+**Web documentation:**
 
-.. code::
+`<https://edinburgh-genome-foundry.github.io/Primavera/>`_
 
-    sudo pip install primavera
+**Github Page**
 
-Alternatively, you can unzip the sources in a folder and type
+`<https://github.com/Edinburgh-Genome-Foundry/Primavera>`_
 
-.. code::
+**Live demo**
 
-    sudo python setup.py install
+`<http://cuba.genomefoundry.org/select_primers>`_
 
-License = MIT
---------------
+**License:** MIT, Copyright Edinburgh Genome Foundry
 
-Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (¢ Edinburg Genome Foundry). Everyone is welcome to contribute !
 
 More biology software
 -----------------------

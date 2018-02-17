@@ -10,9 +10,9 @@ setup(
     version=__version__,
     author='Zulko',
     description='Primer selection + data analysis for DNA assembly validation',
-    long_description=open('README.rst').read(),
+    long_description=open('pypi-readme.rst').read(),
     license='see LICENSE.txt',
     keywords="DNA assembly sequencing primer design",
-    packages= find_packages(exclude='docs'),
+    packages=find_packages(exclude='docs'),
     install_requires=["numpy", "Biopython", "proglog", 'flametree', 'pandas',
                       'dna_features_viewer', 'dnachisel'])
