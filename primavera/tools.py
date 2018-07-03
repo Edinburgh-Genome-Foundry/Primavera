@@ -45,17 +45,25 @@ def minimal_cover(elements_set, subsets, heuristic='default',
     subsets = list(subsets)
     subsets = [(n, s) for (n, s) in subsets if len(s['primary'])]
 
-    def sorting_heuristic(named_subset):
-        if (heuristic == 'default'):
-            return len(named_subset[1]['primary'])
-        else:
-            return heuristic(named_subset, selected)
+    name, subset = None, None
+    for e in elements_set:
+        containing_e = [(n, s) for (n, s) in subsets if e in s['primary']]
+        if len(containing_e) == 1:
+            name, subset = containing_e[0]
+            ordered_subsets = subsets
+            break
 
-    ordered_subsets = sorted(subsets, key=sorting_heuristic)
+    if name is None:
+        def sorting_heuristic(named_subset):
+            if (heuristic == 'default'):
+                return len(named_subset[1]['primary'])
+            else:
+                return heuristic(named_subset, selected)
+        ordered_subsets = sorted(subsets, key=sorting_heuristic)
 
-    name, subset = ordered_subsets.pop()
+        name, subset = ordered_subsets.pop()
     primary, extended = subset['primary'], subset['extended']
-    new_elements_set = elements_set.difference()
+    new_elements_set = elements_set.difference(primary)
     new_extended_elements_set = extended_elements_set.difference(extended)
     new_subsets = [
         (name_, {'primary': sub['primary'].difference(primary),

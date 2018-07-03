@@ -634,3 +634,27 @@ class ReadReferenceMatchesSet:
         record = self.to_biopython_record()
         record.features = [f for f in record.features if f.location is not None]
         SeqIO.write(record, filename, "genbank")
+
+    def sort_matches(self, by=()):
+
+        def score(match):
+            stats = dict(
+                start=match.start,
+                strand=-match.strand,
+                center=0.5 * (match.start + match.end)
+            )
+            return tuple([stats[b] for b in by])
+
+        def sort_key(name_matches):
+            name, matches = name_matches
+            matches = matches.read_matches
+            if len(matches) == 0:
+                return 1e8
+            else:
+                # print (matches)
+                return min([score(match) for match in matches])
+
+        self.read_reference_matches = OrderedDict(sorted([
+            (r, matches)
+            for (r, matches) in self.read_reference_matches.items()
+        ], key=sort_key))

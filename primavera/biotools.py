@@ -119,7 +119,6 @@ def blast_sequences(sequences=None, fasta_file=None,
             subject = fasta_subject_name
     else:
         close_subject = False
-
     p = subprocess.Popen([
         "blastn", "-out", xml_name,
         "-outfmt", "5",
