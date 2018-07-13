@@ -131,7 +131,8 @@ def blast_sequences(sequences=None, fasta_file=None,
         (["-task", "megablast"] if use_megablast else []) + [
         "-word_size", str(word_size),
         "-num_threads", str(num_threads),
-        "-perc_identity", str(perc_identity)
+        "-perc_identity", str(perc_identity),
+        "-dust", "no"
     ], close_fds=True)
     res, blast_err = p.communicate()
     error = None

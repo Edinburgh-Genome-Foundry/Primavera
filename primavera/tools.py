@@ -37,7 +37,7 @@ def minimal_cover(elements_set, subsets, heuristic='default',
             for name, subset in subsets
         ])
         if full_set != elements_set:
-            return ValueError('No full coverage solution exists !')
+            raise ValueError('No full coverage solution exists !')
     if extended_elements_set is None:
         extended_elements_set = elements_set.union({})
     if (len(extended_elements_set) == 0) or (len(elements_set) == 0):

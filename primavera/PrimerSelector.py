@@ -182,7 +182,7 @@ class PrimerSelector:
                 primers_coverages[primer]['extended'].update(cov['extended'])
         # FIND GLOBAL MINIMAL COVER
         self.last_coverages = coverages
-        self.logger(message='Selecting primers...')
+        self.logger(message='Selecting primers, please wait...')
 
         elements_set = set(
             index
@@ -242,7 +242,7 @@ class PrimerSelector:
 
         # CHOOSE A MINIMAL PRIMER COVER FOR EACH CONSTRUCT
         per_record_primers = []
-        self.logger(message='Finding minimal covers for each construct')
+        self.logger(message='Finding minimal covers for each construct...')
         for record in self.logger.iter_bar(record=records):
             elements = set(indices_to_cover[record.id].values())
             subcovers = {
