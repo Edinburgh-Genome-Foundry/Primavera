@@ -9,6 +9,7 @@ setup(
     name='primavera',
     version=__version__,
     author='Zulko',
+    url='https://github.com/Edinburgh-Genome-Foundry/primavera',
     description='Primer selection + data analysis for DNA assembly validation',
     long_description=open('pypi-readme.rst').read(),
     license='see LICENSE.txt',

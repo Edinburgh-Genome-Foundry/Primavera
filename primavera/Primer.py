@@ -18,6 +18,8 @@ class Primer:
       A dictionnary {field, value}
     """
 
+    # TODO: try this, see if it makes things faster:
+    # slots_= ['name', 'sequence', 'metadata']
 
     def __init__(self, name=None, sequence=None, metadata=None):
         """Initialize"""

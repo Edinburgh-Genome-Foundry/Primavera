@@ -219,8 +219,9 @@ class PrimerSelector:
                 name = available_primers_dict[primer_seq].name
                 primer = available_primers_dict[primer_seq]
                 infos = primer.metadata.get('infos', '')
-                primer = Primer(primer.name, primer.sequence,
-                                metadata={'available': True, 'infos': infos})
+                meta = {'available': True, 'infos': infos}
+                meta.update(primer.metadata)
+                primer = Primer(primer.name, primer.sequence, metadata=meta)
             else:
                 name = self.generate_primer_name(
                     available_primers_names=available_primers_names,
