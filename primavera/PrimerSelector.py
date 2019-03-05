@@ -13,7 +13,7 @@ from Bio import SeqIO
 
 import flametree
 from proglog import TqdmProgressBarLogger, ProgressBarLogger
-from dnachisel import (AvoidPattern, repeated_kmers, homopolymer_pattern,
+from dnachisel import (AvoidPattern, RepeatedKmerPattern, HomopolymerPattern,
                        DnaOptimizationProblem)
 
 from .sequencing_simulation import simulate_sequencing
@@ -314,10 +314,12 @@ class PrimerSelector:
     def compute_forbidden_patterns_locations(self, record):
         """Return an array where ``arr[i] == 1`` means that i is surrounded by
         a user-forbidden pattern."""
-        pattern_constraints = [AvoidPattern(homopolymer_pattern(c, 5))
+        pattern_constraints = [AvoidPattern(HomopolymerPattern(c, 5))
                                for c in 'ATGC']
-        kmer_constraints = [AvoidPattern(repeated_kmers(k, n))
-                            for k, n in [(4, 2), (3, 3), (2, 4)]]
+        kmer_constraints = [
+            AvoidPattern(RepeatedKmerPattern(n_repeats, kmer_size))
+            for n_repeats, kmer_size in [(4, 2), (3, 3), (2, 4)]
+        ]
         problem = DnaOptimizationProblem(
             sequence=record,
             constraints=pattern_constraints + kmer_constraints
