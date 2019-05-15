@@ -481,7 +481,7 @@ class ReadReferenceMatchesSet:
                 return "#f9d277"
 
             def compute_feature_label(self, f):
-                return BiopythonTranslator.compute_feature_label(f)[:20]
+                return BiopythonTranslator.compute_feature_label(self, f)[:20]
 
             def compute_filtered_features(self, features):
                 def is_not_parameter(f):
