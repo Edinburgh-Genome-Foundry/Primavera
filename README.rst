@@ -69,6 +69,11 @@ Alternatively, you can unzip the sources in a folder and type
 
     sudo python setup.py install
 
+You will also need to install the NCBI-BLAST+ software. for instance on Ubuntu:
+
+.. code:: shell
+    (sudo) apt-get install ncbi-blast+
+
 License = MIT
 --------------
 
