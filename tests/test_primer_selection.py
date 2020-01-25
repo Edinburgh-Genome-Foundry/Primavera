@@ -33,3 +33,5 @@ def test_PrimerSelector(tmpdir):
                            pdf_path=pdf_path)
     selector.write_multifile_report(records, selected_primers,
                                     target=str(tmpdir))
+    selector.write_multifile_report(records, selected_primers,
+                                    target=os.path.join(str(tmpdir), 'a.zip'))
