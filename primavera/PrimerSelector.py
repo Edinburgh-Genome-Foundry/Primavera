@@ -643,7 +643,7 @@ class PrimerSelector:
                 if len(sort_matches_by):
                     matches_set.sort_matches(sort_matches_by)
                 ax = matches_set.plot(plot_reference=True, plot_coverage=False)
-
+                ax.figure.subplots_adjust(hspace=0.2)
                 ax.set_title(record.id, fontsize=14, weight='bold')
                 for x in self.compute_indices_to_cover(record):
                     ax.axvline(x, c='#fceddb', lw=2, ls='--', zorder=-2000)
