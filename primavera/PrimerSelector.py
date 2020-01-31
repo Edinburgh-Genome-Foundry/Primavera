@@ -290,7 +290,7 @@ class PrimerSelector:
         return set([
             int(indice) % len(record)
             for (start, end) in segments_to_cover
-            for indice in np.linspace(start, end, 1.0 * (end - start) / res)
+            for indice in np.linspace(start, end, int((end - start) / res))
         ])
 
     @staticmethod
