@@ -9,11 +9,14 @@
    :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera
    :alt: Travis CI build status
 
-(documentation under construction)
+.. image:: https://coveralls.io/repos/github/Edinburgh-Genome-Foundry/Primavera/badge.svg?branch=master
+   :target: https://coveralls.io/github/Edinburgh-Genome-Foundry/Primavera?branch=master
+
+
 
 Primavera is a Python library to plan and analyze primer-based verification of DNA assemblies, using Sanger sequencing or verification PCR. It implements methods to design and select primers to ensure that the relevant assembly segments will be covered, and can generate simple (but approximative) plots summarizing the results of a batch of Sanger sequencing.
 
-You can see a live-demo for primer selection `here <http://cuba.genomefoundry.org/select_primers>`_.
+You can see a live-demo for primer selection `on EGF CUBA: Select Primers <http://cuba.genomefoundry.org/select_primers>`_.
 
 Usage
 -----
@@ -32,8 +35,8 @@ The following code assumes that a file ``available_primers.fa`` contains the lab
 
     # LOAD ASSEMBLIES RECORDS AND AVAILABLE PRIMERS
     records = [load_record(file_path, linear=False)
-               for file_path in ['my_record_1.gb', 'my_record_2.gb'...]]
-    available_primers = Primer.list_from_fasta("example_primers.fa")
+               for file_path in ['my_record_1.gb', 'my_record_2.gb']]  # etc
+    available_primers = Primer.list_from_fasta('example_primers.fa')
 
     # SELECT THE BEST PRIMERS
     selector = PrimerSelector(tm_range=(55, 70), size_range=(16, 25))
@@ -48,39 +51,35 @@ The returned ``selected_primers`` contains a list of lists of primers (one list 
 .. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Primavera/master/docs/_static/images/annotated_primer_selection.png
    :width: 600px
 
-**Sequencing Validation**
-
-(documentation for this feature is coming soon)
-
 
 
 Installation
--------------
+------------
 
-You can install Primavera through PIP
-
-.. code::
-
-    sudo pip install primavera
-
-Alternatively, you can unzip the sources in a folder and type
+You can install Primavera through PIP:
 
 .. code::
 
-    sudo python setup.py install
+    pip install primavera
+
+Alternatively, you can unzip the sources in a folder and type:
+
+.. code::
+
+    python setup.py install
 
 You will also need to install the NCBI-BLAST+ software. for instance on Ubuntu:
 
 .. code:: shell
-    (sudo) apt-get install ncbi-blast+
+    apt-get install ncbi-blast+
 
 License = MIT
---------------
+-------------
 
-Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (¢ Edinburg Genome Foundry). Everyone is welcome to contribute !
+Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (Copyright 2017 Edinburgh Genome Foundry). Everyone is welcome to contribute!
 
 More biology software
------------------------
+---------------------
 
 .. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Edinburgh-Genome-Foundry.github.io/master/static/imgs/logos/egf-codon-horizontal.png
  :target: https://edinburgh-genome-foundry.github.io/
