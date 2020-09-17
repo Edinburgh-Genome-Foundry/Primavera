@@ -1,4 +1,4 @@
-"""Class for one-line sequencing report generation from a sequencing batch"""
+"""Class for one-line sequencing report generation from a sequencing batch."""
 
 import os
 from collections import defaultdict
@@ -12,7 +12,6 @@ from .Primer import Primer
 
 
 class Source:
-
     def __call__(self, name):
         return self.get(self.sanitize_name(name), None)
 
@@ -24,7 +23,7 @@ class Source:
 
 
 class PrimersFastaSource(Source):
-    """Primer source using a fasta file for primers names and sequences."""
+    """Primer source using a fasta file for primer names and sequences."""
 
     def __init__(self, fasta_file):
         self.fasta_file = fasta_file
@@ -34,8 +33,9 @@ class PrimersFastaSource(Source):
         }
         self.get = self.primers_dict.get
 
+
 class PrimersSpreadsheetSource(Source):
-    """Primer source using a spreadsheet for primers names and sequences."""
+    """Primer source using a spreadsheet for primer names and sequences."""
 
     def __init__(self, spreadsheet):
         self.spreadsheet = spreadsheet
@@ -44,34 +44,37 @@ class PrimersSpreadsheetSource(Source):
         else:
             primers_list = Primer.list_from_spreadsheet(dataframe=spreadsheet)
         self.primers_dict = {
-            self.sanitize_name(primer.name): primer
-            for primer in primers_list
+            self.sanitize_name(primer.name): primer for primer in primers_list
         }
         self.get = self.primers_dict.get
 
+
 class ConstructsFolderSource(Source):
-    """Loads all files in the folders as Biopython records.
-    """
+    """Loads all files in the folders as Biopython records."""
 
     def __init__(self, dirs, extensions=("gb", "gbk"), file_format="genbank"):
         self.records = {}
         for c_folder in dirs:
             root = flametree.file_tree(c_folder)
-            self.records.update({
-                self.sanitize_name(f._name_no_extension):
-                    SeqIO.read(f._path, file_format)
-                for f in root._all_files
-                if f._extension in extensions
-            })
-        print (len(self.records))
+            self.records.update(
+                {
+                    self.sanitize_name(f._name_no_extension): SeqIO.read(
+                        f._path, file_format
+                    )
+                    for f in root._all_files
+                    if f._extension in extensions
+                }
+            )
+        print(len(self.records))
         self.get = self.records.get
 
 
 class SequencingReportGenerator:
-    """Reads a series of sequencing reads from a zip. Make a report"""
+    """Reads a series of sequencing reads from a zip. Makes a report."""
 
-    def __init__(self, primers_source=None, constructs_source=None,
-                 default_linearity=False):
+    def __init__(
+        self, primers_source=None, constructs_source=None, default_linearity=False
+    ):
         self.primers_source = primers_source
         self.constructs_source = constructs_source
         self.default_linearity = default_linearity
@@ -84,8 +87,7 @@ class SequencingReportGenerator:
         """Return a dict {construct_id: [associated_reads]}."""
         classified_reads = defaultdict(lambda *a: [])
         for read in reads:
-            clone_id, primer_name, construct_name = \
-                self.get_read_infos(read.read_name)
+            clone_id, primer_name, construct_name = self.get_read_infos(read.read_name)
             read.primer = self.primers_source(primer_name)
 
             classified_reads[clone_id].append(read)
@@ -97,25 +99,33 @@ class SequencingReportGenerator:
     def plot_matches_set(self, matches_set, filepath, title=None):
         ax = matches_set.plot(
             plot_coverage=True,
-            plot_reference=True, reference_ax=None,
-            figsize="auto", features_filters=(),
-            features_properties=None, reference_reads_shares="auto")
+            plot_reference=True,
+            reference_ax=None,
+            figsize="auto",
+            features_filters=(),
+            features_properties=None,
+            reference_reads_shares="auto",
+        )
         if title is not None:
             ax.set_title(title)
         ax.figure.savefig(filepath, format="png", bbox_inches="tight")
         plt.close(ax.figure)
 
-    def make_report(self, ab1_files=None, ab1_zip_file=None,
-                    target="my_folder", perc_identity=100,
-                    plot_params=None, replace=True):
-        """"""
+    def make_report(
+        self,
+        ab1_files=None,
+        ab1_zip_file=None,
+        target="my_folder",
+        perc_identity=100,
+        plot_params=None,
+        replace=True,
+    ):
         if ab1_zip_file is not None:
             ab1_files = [
-                f for f in file_tree(ab1_files)._all_files
-                if f._extension == "ab1"
+                f for f in file_tree(ab1_files)._all_files if f._extension == "ab1"
             ]
         reads = [SequencingRead.from_ab1_file(f) for f in ab1_files]
-        reads = [r for r in reads if set(r.read_sequence) != set('N')]
+        reads = [r for r in reads if set(r.read_sequence) != set("N")]
 
         classified_reads = self.classify_reads(reads)
         errors = []
@@ -129,12 +139,13 @@ class SequencingReportGenerator:
             if construct is None:
                 errors.append(construct_name + ": unknown construct")
                 continue
-            linear = construct.__dict__.get('linear', self.default_linearity)
+            linear = construct.__dict__.get("linear", self.default_linearity)
             matches_set = ReadReferenceMatchesSet.from_reads(
                 construct, reads, perc_identity=perc_identity, linear=linear
             )
-            self.plot_matches_set(matches_set, title=clone_id,
-                                  filepath=root._file(clone_id + ".png"))
+            self.plot_matches_set(
+                matches_set, title=clone_id, filepath=root._file(clone_id + ".png")
+            )
             matches_set.to_genbank(root._file(clone_id + ".gb"))
             records += [
                 dict(
@@ -147,18 +158,31 @@ class SequencingReportGenerator:
                     longest_match=matches.longest_match_size,
                     total_matches_length=matches.total_matches_length,
                     average_read_quality=matches.read.average_quality,
-                    read_length=len(matches.read.read_qualities)
+                    read_length=len(matches.read.read_qualities),
                 )
-                for read_name, matches in
-                sorted(matches_set.read_reference_matches.items())
+                for read_name, matches in sorted(
+                    matches_set.read_reference_matches.items()
+                )
             ]
-        columns = ["read", "construct", "primer", "primer_position",
-                   "longest_match", "total_matches_length",
-                   "average_read_quality", "read_length"]
+        columns = [
+            "read",
+            "construct",
+            "primer",
+            "primer_position",
+            "longest_match",
+            "total_matches_length",
+            "average_read_quality",
+            "read_length",
+        ]
         csv_content = "\n".join(
-            [",".join(columns)] + [
-                ",".join([('' if (record[col] is None) else str(record[col]))
-                          for col in columns])
+            [",".join(columns)]
+            + [
+                ",".join(
+                    [
+                        ("" if (record[col] is None) else str(record[col]))
+                        for col in columns
+                    ]
+                )
                 for record in records
             ]
         )

@@ -2,20 +2,21 @@ from Bio import SeqIO
 from .biotools import reverse_complement
 import pandas
 
+
 class Primer:
-    """Class representing a sequencing primer
+    """Class representing a sequencing primer.
 
     Parameters
     ----------
 
     name
-      Name (label) of the primer
+      Name (label) of the primer.
 
     sequence
-      An ATGC string
+      An ATGC string.
 
     metadata
-      A dictionnary {field, value}
+      A dictionary {field, value}.
     """
 
     # TODO: try this, see if it makes things faster:
@@ -51,21 +52,17 @@ class Primer:
     @staticmethod
     def list_from_fasta(fasta_file):
         """Return a list of Primer objects, by reading a FASTA file."""
-        records = SeqIO.parse(fasta_file, 'fasta')
-        return [
-            Primer(name=rec.name, sequence=str(rec.seq))
-            for rec in records
-        ]
+        records = SeqIO.parse(fasta_file, "fasta")
+        return [Primer(name=rec.name, sequence=str(rec.seq)) for rec in records]
 
     @staticmethod
     def list_to_fasta(primers_list, filepath=None):
         """Write a FASTA file from a list of Primer objects."""
-        fasta = "\n\n".join([
-            ">%s\n%s" % (primer.name, primer.sequence)
-            for primer in primers_list
-        ])
+        fasta = "\n\n".join(
+            [">%s\n%s" % (primer.name, primer.sequence) for primer in primers_list]
+        )
         if filepath is not None:
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 f.write(fasta)
         return fasta
 
@@ -75,16 +72,20 @@ class Primer:
 
         The spreadsheet should have columns name/sequence."""
         if dataframe is None:
-            if filepath.lower().endswith('csv'):
+            if filepath.lower().endswith("csv"):
                 dataframe = pandas.read_csv(filepath)
             else:
                 dataframe = pandas.read_excel(filepath)
 
         return [
-            Primer(name=r['name'], sequence=r['sequence'],
-                   metadata=dict((k, v) for (k, v) in r.items()
-                                 if k not in ['name', 'sequence']))
-            for r in dataframe.to_dict(orient='record')
+            Primer(
+                name=r["name"],
+                sequence=r["sequence"],
+                metadata=dict(
+                    (k, v) for (k, v) in r.items() if k not in ["name", "sequence"]
+                ),
+            )
+            for r in dataframe.to_dict(orient="record")
         ]
 
     @staticmethod
@@ -92,20 +93,21 @@ class Primer:
         """Convert a list of Primer objects to a spreadsheet."""
 
         dataframe = pandas.DataFrame.from_records(
-            columns=['name', 'sequence'] + sorted(set(
-                field
-                for primer in primers_list
-                for field in primer.metadata
-            )),
+            columns=["name", "sequence"]
+            + sorted(
+                set(field for primer in primers_list for field in primer.metadata)
+            ),
             data=[
-                dict([('name', primer.name), ('sequence', primer.sequence)] +
-                     list(primer.metadata.items()))
+                dict(
+                    [("name", primer.name), ("sequence", primer.sequence)]
+                    + list(primer.metadata.items())
+                )
                 for primer in primers_list
-            ]
+            ],
         )
 
         if filepath is not None:
-            if filepath.lower().endswith('csv'):
+            if filepath.lower().endswith("csv"):
                 dataframe.write_csv(filepath)
             else:
                 dataframe.write_excel(filepath)

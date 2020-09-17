@@ -18,7 +18,7 @@ The following code assumes that a file ``available_primers.fa`` contains the lab
 
     # LOAD ASSEMBLIES RECORDS AND AVAILABLE PRIMERS
     records = [load_record(file_path, linear=False)
-               for file_path in ['my_record_1.gb', 'my_record_2.gb'...]]
+               for file_path in ['my_record_1.gb', 'my_record_2.gb']]
     available_primers = Primer.list_from_fasta("example_primers.fa")
 
     # SELECT THE BEST PRIMERS
@@ -48,11 +48,11 @@ Infos
 
 `<https://edinburgh-genome-foundry.github.io/Primavera/>`_
 
-**Github Page**
+**Github Page:**
 
 `<https://github.com/Edinburgh-Genome-Foundry/Primavera>`_
 
-**Live demo**
+**Live demo:**
 
 `<http://cuba.genomefoundry.org/select_primers>`_
 
@@ -60,7 +60,7 @@ Infos
 
 
 More biology software
------------------------
+---------------------
 
 .. image:: https://raw.githubusercontent.com/Edinburgh-Genome-Foundry/Edinburgh-Genome-Foundry.github.io/master/static/imgs/logos/egf-codon-horizontal.png
  :target: https://edinburgh-genome-foundry.github.io/

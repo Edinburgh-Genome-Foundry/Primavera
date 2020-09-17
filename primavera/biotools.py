@@ -13,16 +13,19 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
-PYTHON3 = (sys.version_info[0] == 3)
+PYTHON3 = sys.version_info[0] == 3
 
 if PYTHON3:
     from io import StringIO, BytesIO
+
     StringBytesIO = BytesIO
 
 else:
     from StringIO import StringIO
+
     BytesIO = StringIO
     StringBytesIO = StringIO
+
 
 def complement(dna_sequence):
     """Return the complement of the DNA sequence.
@@ -42,10 +45,19 @@ def reverse_complement(sequence):
     return complement(sequence)[::-1]
 
 
-def blast_sequences(sequences=None, fasta_file=None,
-                    blast_db=None, subject=None, word_size=4,
-                    perc_identity=80, num_alignments=1000, num_threads=3,
-                    use_megablast=True, evalue=None, ungapped=True):
+def blast_sequences(
+    sequences=None,
+    fasta_file=None,
+    blast_db=None,
+    subject=None,
+    word_size=4,
+    perc_identity=80,
+    num_alignments=1000,
+    num_threads=3,
+    use_megablast=True,
+    evalue=None,
+    ungapped=True,
+):
     """Return a Biopython BLAST record of the given sequence BLASTed
     against the provided database.
 
@@ -53,30 +65,35 @@ def blast_sequences(sequences=None, fasta_file=None,
     ----------
 
     sequences
-      Either an ATGC string or a list of ATGC strings or a dict {name: seq:}
+      Either an ATGC string or a list of ATGC strings or a dict {name: seq:}.
+
+    blast_db
+      The BLAST database.
 
     subject
       Either a path to a fasta (.fa) file or an ATGC string. Subject to blast
       against.
 
     word_size
-      Word size to use in the blast
+      Word size to use in the blast.
 
     perc_identity
-      Minimal percentage of identical nucleotides in a match for it to be kept
+      Minimal percentage of identical nucleotides in a match for it to be kept.
 
     num_alignments
       Number of alignments to keep
-
+.
     num_threads
-      Number of threads for the BLAST
+      Number of threads for the BLAST.
 
     use_megablast
       Whether to use Megablast.
 
-    ungapped
-      No-gaps matches only ?
+    evalue
+      The BLAST E-value parameter.
 
+    ungapped
+      No-gaps matches only?
 
 
     Examples
@@ -119,21 +136,34 @@ def blast_sequences(sequences=None, fasta_file=None,
             subject = fasta_subject_name
     else:
         close_subject = False
-    p = subprocess.Popen([
-        "blastn", "-out", xml_name,
-        "-outfmt", "5",
-        "-num_alignments", str(num_alignments),
-        "-query", fasta_name] +
-        (["-db", blast_db] if blast_db is not None
-         else ['-subject', subject]) +
-        (["-ungapped"] if ungapped else []) +
-        (["-evalue", str(evalue)] if evalue else []) +
-        (["-task", "megablast"] if use_megablast else []) + [
-        "-word_size", str(word_size),
-        "-num_threads", str(num_threads),
-        "-perc_identity", str(perc_identity),
-        "-dust", "no"
-    ], close_fds=True)
+    p = subprocess.Popen(
+        [
+            "blastn",
+            "-out",
+            xml_name,
+            "-outfmt",
+            "5",
+            "-num_alignments",
+            str(num_alignments),
+            "-query",
+            fasta_name,
+        ]
+        + (["-db", blast_db] if blast_db is not None else ["-subject", subject])
+        + (["-ungapped"] if ungapped else [])
+        + (["-evalue", str(evalue)] if evalue else [])
+        + (["-task", "megablast"] if use_megablast else [])
+        + [
+            "-word_size",
+            str(word_size),
+            "-num_threads",
+            str(num_threads),
+            "-perc_identity",
+            str(perc_identity),
+            "-dust",
+            "no",
+        ],
+        close_fds=True,
+    )
     res, blast_err = p.communicate()
     error = None
     for i in range(3):
@@ -149,12 +179,12 @@ def blast_sequences(sequences=None, fasta_file=None,
         raise ValueError("Problem reading the blast record: " + str(error))
     for j in range(3):
         try:
-            os.fdopen(xml_file, 'w').close()
-            os.fdopen(fasta_file, 'w').close()
+            os.fdopen(xml_file, "w").close()
+            os.fdopen(fasta_file, "w").close()
             os.remove(xml_name)
             os.remove(fasta_name)
             if close_subject:
-                open(subject, 'w').close()
+                open(subject, "w").close()
                 if remove_subject:
                     os.remove(subject)
         except IOError as err:
@@ -168,10 +198,15 @@ def blast_sequences(sequences=None, fasta_file=None,
 # RETIRING THIS ONE ASAP:
 def read_records_from_zip(zip_path):
     """Return SeqRecords from all FASTA/GENBANK files in the zip."""
-    with zipfile.ZipFile(zip_path, 'r') as archive:
-        extensions_types = {".ab1": "abi", ".abi": "abi", ".gb": "genbank",
-                            ".gbk": "genbank", ".fa": "fasta",
-                            ".fasta": "fasta"}
+    with zipfile.ZipFile(zip_path, "r") as archive:
+        extensions_types = {
+            ".ab1": "abi",
+            ".abi": "abi",
+            ".gb": "genbank",
+            ".gbk": "genbank",
+            ".fa": "fasta",
+            ".fasta": "fasta",
+        }
         extract = {}
         failed_files = []
         for f in archive.filelist:
@@ -179,21 +214,22 @@ def read_records_from_zip(zip_path):
             try:
                 if ext in extensions_types:
                     content = StringBytesIO(archive.read(f.filename))
-                    extract[f.filename] = SeqIO.read(content,
-                                                     extensions_types[ext])
+                    extract[f.filename] = SeqIO.read(content, extensions_types[ext])
             except:
                 failed_files.append(f.filename)
     return extract, failed_files
+
 
 def rotate_circular_record(record, n_bases):
     """Changes the starting point of a circular SeqRecord by n_bases bases."""
     new_record = deepcopy(record)
     new_record.seq = record.seq[n_bases:] + record.seq[:n_bases]
     for f in new_record.features:
-        f.location += (-n_bases)
+        f.location += -n_bases
         if max(f.location.start, f.location.end) <= 0:
             f.location += len(record)
     return new_record
+
 
 def group_overlapping_segments(segments, min_distance=10):
     if segments == []:
@@ -208,19 +244,18 @@ def group_overlapping_segments(segments, min_distance=10):
     return [tuple(s) for s in returned_segments]
 
 
-
 def get_segment_coordinates(center, segment_length, sequence_length):
     """Return max(0, c - s/2) - min(L, c + L/2).
 
     Where c=center, s=segment_length, L=sequence_length.
     """
     half = int(segment_length / 2)
-    start = max(0, min(center - half,  sequence_length - segment_length))
+    start = max(0, min(center - half, sequence_length - segment_length))
     end = start + segment_length
     return start, end
 
-def find_best_primer_locations(sequence, size_range=(15, 25),
-                               tm_range=(55, 70)):
+
+def find_best_primer_locations(sequence, size_range=(15, 25), tm_range=(55, 70)):
     """Quickly compute all overhangs in the sequence.
 
     This function uses the heuristic {A, T}=2degC, {G, C}=4degC to compute
@@ -240,65 +275,76 @@ def find_best_primer_locations(sequence, size_range=(15, 25),
         end = start + len(arr)
         table[i, start:end] = arr
         table[i, :start] = table[i, start]
-        table[i, end:] = table[i, end-1]
-    scores = - (table - tmin) * (table - tmax)
+        table[i, end:] = table[i, end - 1]
+    scores = -(table - tmin) * (table - tmax)
     best_sizes_indices = scores.argmax(axis=0)
     best_sizes = lmin + best_sizes_indices
     validities = np.choose(best_sizes_indices, scores) >= 0
     osizes_and_validities = zip(best_sizes, validities)
     return [
-      None if not valid
-      else get_segment_coordinates(i, ovh_size, len(sequence))
-      for i, (ovh_size, valid) in enumerate(osizes_and_validities)
+        None if not valid else get_segment_coordinates(i, ovh_size, len(sequence))
+        for i, (ovh_size, valid) in enumerate(osizes_and_validities)
     ]
 
+
 def find_non_unique_segments(sequence, perc_identity=80):
-    blast_record = blast_sequences(sequence, subject=sequence,
-                                   perc_identity=perc_identity,
-                                   ungapped=False, word_size=4)[0]
-    segments_with_alignments = sorted(set([
-        (h.query_start, h.query_end)
-        for al in blast_record.alignments
-        for h in al.hsps
-        if (h.query_start, h.query_end) != (1, len(sequence))
-    ]))
+    blast_record = blast_sequences(
+        sequence,
+        subject=sequence,
+        perc_identity=perc_identity,
+        ungapped=False,
+        word_size=4,
+    )[0]
+    segments_with_alignments = sorted(
+        set(
+            [
+                (h.query_start, h.query_end)
+                for al in blast_record.alignments
+                for h in al.hsps
+                if (h.query_start, h.query_end) != (1, len(sequence))
+            ]
+        )
+    )
     return group_overlapping_segments(segments_with_alignments)
 
-def load_record(filename, linear=True, name='auto'):
+
+def load_record(filename, linear=True, name="auto"):
     if filename.lower().endswith(("gb", "gbk")):
         record = SeqIO.read(filename, "genbank")
-    elif filename.lower().endswith(('fa', 'fasta')):
+    elif filename.lower().endswith(("fa", "fasta")):
         record = SeqIO.read(filename, "fasta")
     else:
-        raise ValueError('Unknown format for file: %s' % filename)
+        raise ValueError("Unknown format for file: %s" % filename)
     record.linear = linear
-    if name == 'auto':
+    if name == "auto":
         name = os.path.splitext(os.path.basename(filename))[0]
     record.id = name
     record.name = name.replace(" ", "_")[:20]
     return record
 
-def annotate_record(seqrecord, location="full", feature_type="misc_feature",
-                    margin=0, **qualifiers):
+
+def annotate_record(
+    seqrecord, location="full", feature_type="misc_feature", margin=0, **qualifiers
+):
     """Add a feature to a Biopython SeqRecord.
 
     Parameters
     ----------
 
     seqrecord
-      The biopython seqrecord to be annotated.
+      The Biopython seqrecord to be annotated.
 
     location
       Either (start, end) or (start, end, strand). (strand defaults to +1)
 
     feature_type
-      The type associated with the feature
+      The type associated with the feature.
 
     margin
       Number of extra bases added on each side of the given location.
 
     qualifiers
-      Dictionnary that will be the Biopython feature's `qualifiers` attribute.
+      Dictionary that will be the Biopython feature's `qualifiers` attribute.
     """
     if location == "full":
         location = (margin, len(seqrecord) - margin)
@@ -308,6 +354,6 @@ def annotate_record(seqrecord, location="full", feature_type="misc_feature",
         SeqFeature(
             FeatureLocation(location[0], location[1], strand),
             qualifiers=qualifiers,
-            type=feature_type
+            type=feature_type,
         )
     )

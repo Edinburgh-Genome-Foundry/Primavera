@@ -30,27 +30,20 @@ class SequencingRead:
     ----------
 
     read_name
-      Name (label or any other ID) of the read
+      Name (label or any other ID) of the read.
 
     read_sequence
-      An ATGC string
+      An ATGC string.
 
     read_qualities
       A sequence of numbers between 0 and 1 (CHECK), as long as the
       read_sequence, representing the confidence for each nucleotide read.
 
     primer
-
-
-
     """
 
     def __init__(
-        self,
-        read_name=None,
-        read_sequence=None,
-        read_qualities=None,
-        primer=None,
+        self, read_name=None, read_sequence=None, read_qualities=None, primer=None,
     ):
         """Initialize"""
         self.read_name = read_name
@@ -82,9 +75,7 @@ class SequencingRead:
             read_name=read_name,
             primer=primer,
             read_sequence=str(record.seq),
-            read_qualities=np.array(
-                record.letter_annotations["phred_quality"]
-            ),
+            read_qualities=np.array(record.letter_annotations["phred_quality"]),
         )
 
     @staticmethod
@@ -95,9 +86,7 @@ class SequencingRead:
                 SequencingRead(
                     read_name=name,
                     read_sequence=str(record.seq),
-                    read_qualities=np.array(
-                        record.letter_annotations["phred_quality"]
-                    ),
+                    read_qualities=np.array(record.letter_annotations["phred_quality"]),
                 )
                 for (name, record) in sorted(reads.items())
             ],
@@ -106,9 +95,7 @@ class SequencingRead:
 
 
 class SequenceMatch:
-    def __init__(
-        self, start, end, strand=1, percent=None, read_qualities=None
-    ):
+    def __init__(self, start, end, strand=1, percent=None, read_qualities=None):
         self.start = start
         self.end = end
         self.strand = strand
@@ -127,11 +114,7 @@ class SequenceMatch:
             qualities = None
 
         return SequenceMatch(
-            start=start,
-            end=end,
-            strand=strand,
-            percent=prc,
-            read_qualities=qualities,
+            start=start, end=end, strand=strand, percent=prc, read_qualities=qualities,
         )
 
     def rotated(self, n_bases, construct_length):
@@ -172,12 +155,7 @@ class ReadReferenceMatches:
     """
 
     def __init__(
-        self,
-        reference,
-        primer_matches=(),
-        read_matches=(),
-        primer=None,
-        read=None,
+        self, reference, primer_matches=(), read_matches=(), primer=None, read=None,
     ):
         self.primer_matches = list(primer_matches)
         self.read_matches = list(read_matches)
@@ -191,9 +169,7 @@ class ReadReferenceMatches:
         new_matches = [m for m in matches]
         for i1, m1 in enumerate(matches):
             for m2 in matches[i1 + 1 :]:
-                if (m2.start <= m1.start <= m2.end) and (
-                    m2.start <= m1.end <= m2.end
-                ):
+                if (m2.start <= m1.start <= m2.end) and (m2.start <= m1.end <= m2.end):
                     new_matches.remove(m1)
                     break
         self.read_matches = new_matches
@@ -206,12 +182,10 @@ class ReadReferenceMatches:
         return ReadReferenceMatches(
             rotated_ref,
             primer_matches=[
-                m.rotated(n_bases, len(self.reference))
-                for m in self.primer_matches
+                m.rotated(n_bases, len(self.reference)) for m in self.primer_matches
             ],
             read_matches=[
-                m.rotated(n_bases, len(self.reference))
-                for m in self.read_matches
+                m.rotated(n_bases, len(self.reference)) for m in self.read_matches
             ],
         )
 
@@ -280,7 +254,7 @@ class ReadReferenceMatches:
             return [m.start for m in self.primer_matches]
 
     def matches_as_biopython_features(self):
-        """Return a list of the matches as Biopython features"""
+        """Return a list of the matches as Biopython features."""
         result = []
         for m in self.read_matches:
             feature = m.to_biopython_feature()
@@ -299,7 +273,6 @@ class ReadReferenceMatches:
         """Return a Biopython Seqrecord with the matches as annotations.
 
         The record also features the reference's features.
-
         """
         record = deepcopy(self.reference)
         record.features += self.matches_as_biopython_features()
@@ -323,7 +296,7 @@ class ReadReferenceMatchesSet:
     read_reference_matches
 
     linear
-      Whether the reference is linear
+      Whether the reference is linear.
     """
 
     def __init__(self, read_reference_matches, linear=True):
@@ -384,9 +357,7 @@ class ReadReferenceMatchesSet:
             [
                 (
                     read.read_name,
-                    ReadReferenceMatches(
-                        reference, primer=read.primer, read=read
-                    ),
+                    ReadReferenceMatches(reference, primer=read.primer, read=read),
                 )
                 for read in reads
             ]
@@ -426,9 +397,7 @@ class ReadReferenceMatchesSet:
             if read.read_sequence is not None
         }
         reads_blast_record = blast_sequences(
-            reads_sequences,
-            subject=reference_sequence,
-            perc_identity=perc_identity,
+            reads_sequences, subject=reference_sequence, perc_identity=perc_identity,
         )
 
         for reads_alignments in reads_blast_record:
@@ -476,9 +445,7 @@ class ReadReferenceMatchesSet:
 
                     match = SequenceMatch.from_hsp(hsp, read=read)
 
-                    read_reference_matches[read_name].read_matches.append(
-                        match
-                    )
+                    read_reference_matches[read_name].read_matches.append(match)
 
         for sequencing_match in read_reference_matches.values():
             sequencing_match.remove_read_matches_contained_in_others()
@@ -524,7 +491,7 @@ class ReadReferenceMatchesSet:
         figsize
           Size of the final figure. Leave it to 'auto' for a figure of width
           12 and automatically chosen height. Or e.g. (16, 'auto') for a figure
-          of width 12 and automatically chosen height
+          of width 12 and automatically chosen height.
 
         features_filters
           List of functions (feature=>True/False). Features for which at least
@@ -538,7 +505,6 @@ class ReadReferenceMatchesSet:
           Relative shares of the pictures that should be occupied by the
           reference and by the reads. It is an experimental parameter so
           leave it to 'auto' for now.
-
         """
 
         # DEFINE HOW THE REFERENCE SCHEMA WILL LOOK LIKE
@@ -575,9 +541,7 @@ class ReadReferenceMatchesSet:
             if not plot_reference:
                 figure_height = sequencing_ax_height
             else:
-                ref_ax, _ = grecord.plot(
-                    with_ruler=False, figure_width=figsize[0]
-                )
+                ref_ax, _ = grecord.plot(with_ruler=False, figure_width=figsize[0])
                 ref_fig_height = ref_ax.figure.get_size_inches()[1]
                 figure_height = sequencing_ax_height + ref_fig_height
                 if reference_reads_shares == "auto":
@@ -624,9 +588,7 @@ class ReadReferenceMatchesSet:
 
         gr_record = GraphicRecord(sequence_length=L, features=[])
 
-        for i, (read_name, matches) in enumerate(
-            read_reference_matches.items()
-        ):
+        for i, (read_name, matches) in enumerate(read_reference_matches.items()):
             y = i + 1
             ax.axhline(y, ls=":", lw=0.5, color="#aaaaaa", zorder=-1000)
             if matches.primer.metadata.get("available", False):
@@ -676,9 +638,7 @@ class ReadReferenceMatchesSet:
             coverage_dict[(primer_match.start, primer_match.end)] = primer_name
         coverages = list(coverage_dict.keys())
 
-        selected = [
-            min(coverages, key=lambda start_end: (start_end[0], -start_end[1]))
-        ]
+        selected = [min(coverages, key=lambda start_end: (start_end[0], -start_end[1]))]
         while True:
             overlapping = [
                 (start, end)
@@ -686,9 +646,7 @@ class ReadReferenceMatchesSet:
                 if (start <= selected[-1][1] < end)
             ]
             if overlapping != []:
-                new_segment = max(
-                    overlapping, key=lambda start_end: start_end[1]
-                )
+                new_segment = max(overlapping, key=lambda start_end: start_end[1])
                 selected.append(new_segment)
             else:
                 new_components = [
@@ -699,8 +657,7 @@ class ReadReferenceMatchesSet:
                 if new_components == []:
                     break
                 new_segment = min(
-                    new_components,
-                    key=lambda start_end: (start_end[0], -start_end[1]),
+                    new_components, key=lambda start_end: (start_end[0], -start_end[1]),
                 )
                 selected.append(new_segment)
         selected_primers = set(coverage_dict[s] for s in selected)
@@ -730,9 +687,7 @@ class ReadReferenceMatchesSet:
         The record also features the reference's features.
         """
         record = self.to_biopython_record()
-        record.features = [
-            f for f in record.features if f.location is not None
-        ]
+        record.features = [f for f in record.features if f.location is not None]
         SeqIO.write(record, filename, "genbank")
 
     def sort_matches(self, by=()):
@@ -755,11 +710,7 @@ class ReadReferenceMatchesSet:
 
         self.read_reference_matches = OrderedDict(
             sorted(
-                [
-                    (r, matches)
-                    for (r, matches) in self.read_reference_matches.items()
-                ],
+                [(r, matches) for (r, matches) in self.read_reference_matches.items()],
                 key=sort_key,
             )
         )
-
