@@ -5,9 +5,9 @@
     <br /><br />
     </p>
 
-.. image:: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera.svg?branch=master
-   :target: https://travis-ci.org/Edinburgh-Genome-Foundry/Primavera
-   :alt: Travis CI build status
+.. image:: https://github.com/Edinburgh-Genome-Foundry/Primavera/actions/workflows/build.yml/badge.svg
+    :target: https://github.com/Edinburgh-Genome-Foundry/Primavera/actions/workflows/build.yml
+    :alt: GitHub CI build status
 
 .. image:: https://coveralls.io/repos/github/Edinburgh-Genome-Foundry/Primavera/badge.svg?branch=master
    :target: https://coveralls.io/github/Edinburgh-Genome-Foundry/Primavera?branch=master

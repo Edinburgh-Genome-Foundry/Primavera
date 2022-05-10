@@ -1,10 +1,10 @@
 Primavera
-==========
+=========
 
 Primavera is a Python library to plan and analyze primer-based verification of DNA assemblies, using Sanger sequencing or verification PCR. It implements methods to design and select primers to ensure that the relevant assembly segments will be covered, and can generate simple (but approximative) plots summarizing the results of a batch of Sanger sequencing.
 
 Primer selection example
--------------------------
+------------------------
 
 The following code assumes that a file ``available_primers.fa`` contains the labels and sequences of all available primers in the lab, and that the assemblies to be sequence-verified have annotations indicating the zones that the sequencing should cover and zones where primer annealing should be avoided.
 
@@ -42,7 +42,7 @@ Infos
 
 .. code:: bash
 
- pip install primavera
+    pip install primavera
 
 **Web documentation:**
 
