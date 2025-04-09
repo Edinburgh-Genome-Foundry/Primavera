@@ -13,31 +13,27 @@ from .biotools import reverse_complement
 def simulate_sequencing(
     sequence, primers, read_range=(100, 800), linear=True, trim_nonmatching_primers=True
 ):
-    """
+    """Simulate sequencing.
 
     Parameters
     ----------
-
     sequence
 
     primers
 
-    read_length
-
-    gap
+    read_range
 
     linear
 
     trim_nonmatching_primers
 
     Returns
-    --------
-
+    -------
     If primers is simply a Primer object, a SequencingMatches object
     featuring the primer matches on the sequence (`match.primer_matches`)
     and the associated read(s) (`match.read_matches`).
 
-    If `primers` is an list/tuple of primers, an ordered dictionary of the
+    If `primers` is a list/tuple of primers, an ordered dictionary of the
     form {primer_name: SequencingMatches()}.
     """
 

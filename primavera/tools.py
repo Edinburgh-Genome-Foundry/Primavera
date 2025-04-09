@@ -34,7 +34,6 @@ def minimal_cover(
 
     Returns
     -------
-
       None if no solution was found, else a collection of [(name, subset)...].
     """
     if depth == 0:

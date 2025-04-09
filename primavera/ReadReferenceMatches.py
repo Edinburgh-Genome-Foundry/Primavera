@@ -28,7 +28,6 @@ class SequencingRead:
 
     Parameters
     ----------
-
     read_name
       Name (label or any other ID) of the read.
 
@@ -304,7 +303,6 @@ class ReadReferenceMatchesSet:
 
     Parameters
     ----------
-
     read_reference_matches
 
     linear
@@ -478,12 +476,10 @@ class ReadReferenceMatchesSet:
     ):
         """Plot the sequencing matches.
 
-        Useful to get a general overview of the sequencing (coverage, mutations
-        etc.)
+        Useful to get a general overview of the sequencing (coverage, mutations etc.)
 
         Parameters
         ----------
-
         ax
           Matplotlib ax on which to plot the alignments. If None, one will be
           automatically created.
@@ -685,7 +681,7 @@ class ReadReferenceMatchesSet:
         )
 
     def to_biopython_record(self, record_id=None):
-        """Return a Biopython Seqrecord with the matches as annotations.
+        """Return a Biopython SeqRecord with the matches as annotations.
 
         The record also features the reference's features.
         """

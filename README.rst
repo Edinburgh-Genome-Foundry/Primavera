@@ -18,6 +18,8 @@ Primavera is a Python library to plan and analyze primer-based verification of D
 
 You can see a live-demo for primer selection `on EGF CUBA: Select Primers <http://cuba.genomefoundry.org/select_primers>`_.
 
+Documentation: `API reference <https://edinburgh-genome-foundry.github.io/Primavera/>`_
+
 
 Usage
 -----

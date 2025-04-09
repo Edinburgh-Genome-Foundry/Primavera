@@ -55,7 +55,6 @@ class PrimerSelector:
 
     Parameters
     ----------
-
     read_range
       The experimentally measured range (start, end) so that, when a primer
       anneals in the sequence at index i, the range ``[i + start, i + end]`` will
@@ -138,8 +137,7 @@ class PrimerSelector:
           A list of Biopython records to sequence. The zones to cover in the
           record should be indicated by a feature of type ``misc_feature`` and
           label ``cover``. The zones where no primers are desired should be
-          indicated by a feature of type ``misc_feature`` and label
-          ``no_primer``.
+          indicated by a feature of type ``misc_feature`` and label ``no_primer``.
 
         available_primers
           List of Primer objects representing the available primers.
@@ -153,9 +151,8 @@ class PrimerSelector:
 
         Returns
         -------
-
         selected_primers
-          A list of lists of primers, one list of primers for each consrtruct.
+          A list of lists of primers, one list of primers for each construct.
         """
         if strand == "both":
             reverse_records = []
@@ -403,7 +400,6 @@ class PrimerSelector:
         and non-unique locations.
         ``arr[i] == 1`` indicates that position i should be avoided in the
         record.
-
         """
         return np.maximum(
             *(
@@ -429,7 +425,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         primers
           List of primer sequences.
         """
@@ -463,7 +458,6 @@ class PrimerSelector:
 
         Parameters
         ----------
-
         record
           The record in which to search.
 
@@ -475,7 +469,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         primers_coverage
           ``{primer_name: list_of_indices_covered_in_this_record}``.
         """
@@ -561,7 +554,6 @@ class PrimerSelector:
 
         Parameters
         ----------
-
         prefix
           The prefix for the primer name.
 
@@ -594,7 +586,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         part_name, index
           The name of the part, and position in the part, where it was found.
           If the sequence is found in different parts, only the first find
@@ -632,7 +623,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         part_name, index
           The name of the part, and position in the part, where it was found.
           If the sequence is found in different parts, only the first find
@@ -660,7 +650,6 @@ class PrimerSelector:
 
         Parameters
         ----------
-
         primers
           A list of primers, or list of list, as returned by ``select_primers``.
 
@@ -670,7 +659,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         dataframe
           The pandas dataframe of the table.
         """
@@ -744,7 +732,6 @@ class PrimerSelector:
 
         Parameters
         ----------
-
         selected_primers
           The list of list of primers, as returned by the ``select_primers``
           method.
@@ -762,7 +749,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         dataframe
           The pandas dataframe of the table.
         """
@@ -788,7 +774,6 @@ class PrimerSelector:
 
         Parameters
         ----------
-
         primers
           A list of primers, or list of list, as returned by ``select_primers``.
 
@@ -798,7 +783,6 @@ class PrimerSelector:
 
         Returns
         -------
-
         dataframe
           The pandas dataframe of the table.
         """
@@ -821,14 +805,13 @@ class PrimerSelector:
 
         The report contains:
         - A PDF 'coverages_plots.pdf', where each page shows how one construct
-          should be covered by the primers' respective sequencing.
+        should be covered by the primers' respective sequencing.
         - A spreadsheet 'primers_list.csv' indicating for each primer its
-          sequence and whether it is already available.
+        sequence and whether it is already available.
         - A spreadsheet indicating, for each construct,
 
         Parameters
         ----------
-
         records
           A list of construct records.
 

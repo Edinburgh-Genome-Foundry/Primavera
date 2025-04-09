@@ -8,7 +8,6 @@ class Primer:
 
     Parameters
     ----------
-
     name
       Name (label) of the primer.
 

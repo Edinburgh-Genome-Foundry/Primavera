@@ -32,7 +32,7 @@ def complement(dna_sequence):
     """Return the complement of the DNA sequence.
 
     For instance ``complement("ATGCCG")`` returns ``"TACGGC"``.
-    Uses BioPython for speed.
+    Uses Biopython for speed.
     """
     return str(Seq(dna_sequence).complement())
 
@@ -41,7 +41,7 @@ def reverse_complement(sequence):
     """Return the reverse-complement of the DNA sequence.
 
     For instance ``complement("ATGCCG")`` returns ``"GCCGTA"``.
-    Uses BioPython for speed.
+    Uses Biopython for speed.
     """
     return complement(sequence)[::-1]
 
@@ -60,50 +60,49 @@ def blast_sequences(
     ungapped=True,
 ):
     """Return a Biopython BLAST record of the given sequence BLASTed
-        against the provided database.
+    against the provided database.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
+    sequences
+        Either an ATGC string or a list of ATGC strings or a dict {name: seq:}.
 
-        sequences
-          Either an ATGC string or a list of ATGC strings or a dict {name: seq:}.
+    blast_db
+        The BLAST database.
 
-        blast_db
-          The BLAST database.
+    subject
+        Either a path to a fasta (.fa) file or an ATGC string. Subject to blast
+        against.
 
-        subject
-          Either a path to a fasta (.fa) file or an ATGC string. Subject to blast
-          against.
+    word_size
+        Word size to use in the blast.
 
-        word_size
-          Word size to use in the blast.
+    perc_identity
+        Minimal percentage of identical nucleotides in a match for it to be kept.
 
-        perc_identity
-          Minimal percentage of identical nucleotides in a match for it to be kept.
+    num_alignments
+        Number of alignments to keep.
 
-        num_alignments
-          Number of alignments to keep
-    .
-        num_threads
-          Number of threads for the BLAST.
+    num_threads
+        Number of threads for the BLAST.
 
-        use_megablast
-          Whether to use Megablast.
+    use_megablast
+        Whether to use Megablast.
 
-        evalue
-          The BLAST E-value parameter.
+    evalue
+        The BLAST E-value parameter.
 
-        ungapped
-          No-gaps matches only?
+    ungapped
+        No-gaps matches only?
 
 
-        Examples
-        --------
+    Examples
+    --------
 
-        >>> blast_record = blast_sequence("ATTGTGCGTGTGTGCGT", "blastdb/ecoli")
-        >>> for alignment in blast_record.alignments:
-        >>>     for hit in alignment.hsps:
-        >>>         print (hit.identities)
+    >>> blast_record = blast_sequence("ATTGTGCGTGTGTGCGT", "blastdb/ecoli")
+    >>> for alignment in blast_record.alignments:
+    >>>     for hit in alignment.hsps:
+    >>>         print (hit.identities)
     """
 
     if isinstance(sequences, str):
@@ -198,7 +197,7 @@ def blast_sequences(
 
 # RETIRING THIS ONE ASAP:
 def read_records_from_zip(zip_path):
-    """Return SeqRecords from all FASTA/GENBANK files in the zip."""
+    """Return SeqRecords from all FASTA/Genbank files in the zip."""
     with zipfile.ZipFile(zip_path, "r") as archive:
         extensions_types = {
             ".ab1": "abi",
