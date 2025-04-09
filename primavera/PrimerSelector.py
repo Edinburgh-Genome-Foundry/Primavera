@@ -570,7 +570,7 @@ class PrimerSelector:
         """
         max_index = 0
         for name in available_primers_names:
-            match = re.match(prefix + "(\d+)", name)
+            match = re.match(prefix + "(\\d+)", name)
             if match is None:
                 continue
             index = int(match.groups()[0])
