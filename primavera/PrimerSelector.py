@@ -113,7 +113,7 @@ class PrimerSelector:
         self.primers_conditions = primer_conditions
         self.nucleotide_resolution = nucleotide_resolution
         self.coverage_resolution = coverage_resolution
-        self.primer_reuse_bonus = 2
+        self.primer_reuse_bonus = primer_reuse_bonus
         if logger == "bars":
             logger = PrimerSelectorLogger()
         if logger is None:
