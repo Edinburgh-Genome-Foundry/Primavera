@@ -1,5 +1,4 @@
-"""Class to automatically select available and new primers for sequencing runs.
-"""
+"""Class to automatically select available and new primers for sequencing runs."""
 
 from copy import deepcopy
 import re

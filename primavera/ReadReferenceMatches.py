@@ -43,7 +43,11 @@ class SequencingRead:
     """
 
     def __init__(
-        self, read_name=None, read_sequence=None, read_qualities=None, primer=None,
+        self,
+        read_name=None,
+        read_sequence=None,
+        read_qualities=None,
+        primer=None,
     ):
         """Initialize"""
         self.read_name = read_name
@@ -114,7 +118,11 @@ class SequenceMatch:
             qualities = None
 
         return SequenceMatch(
-            start=start, end=end, strand=strand, percent=prc, read_qualities=qualities,
+            start=start,
+            end=end,
+            strand=strand,
+            percent=prc,
+            read_qualities=qualities,
         )
 
     def rotated(self, n_bases, construct_length):
@@ -151,11 +159,15 @@ class SequenceMatch:
 
 
 class ReadReferenceMatches:
-    """Represent all matches between one read from one primer, and a reference.
-    """
+    """Represent all matches between one read from one primer, and a reference."""
 
     def __init__(
-        self, reference, primer_matches=(), read_matches=(), primer=None, read=None,
+        self,
+        reference,
+        primer_matches=(),
+        read_matches=(),
+        primer=None,
+        read=None,
     ):
         self.primer_matches = list(primer_matches)
         self.read_matches = list(read_matches)
@@ -345,8 +357,7 @@ class ReadReferenceMatchesSet:
         max_read_length=1000,
         linear=True,
     ):
-        """
-        """
+        """ """
         reference_sequence = (
             reference if isinstance(reference, str) else str(reference.seq)
         )
@@ -397,7 +408,9 @@ class ReadReferenceMatchesSet:
             if read.read_sequence is not None
         }
         reads_blast_record = blast_sequences(
-            reads_sequences, subject=reference_sequence, perc_identity=perc_identity,
+            reads_sequences,
+            subject=reference_sequence,
+            perc_identity=perc_identity,
         )
 
         for reads_alignments in reads_blast_record:
@@ -657,7 +670,8 @@ class ReadReferenceMatchesSet:
                 if new_components == []:
                     break
                 new_segment = min(
-                    new_components, key=lambda start_end: (start_end[0], -start_end[1]),
+                    new_components,
+                    key=lambda start_end: (start_end[0], -start_end[1]),
                 )
                 selected.append(new_segment)
         selected_primers = set(coverage_dict[s] for s in selected)

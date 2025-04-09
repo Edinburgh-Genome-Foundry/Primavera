@@ -1,4 +1,5 @@
 """Bla."""
+
 import tempfile
 import subprocess
 import time
@@ -59,50 +60,50 @@ def blast_sequences(
     ungapped=True,
 ):
     """Return a Biopython BLAST record of the given sequence BLASTed
-    against the provided database.
+        against the provided database.
 
-    Parameters
-    ----------
+        Parameters
+        ----------
 
-    sequences
-      Either an ATGC string or a list of ATGC strings or a dict {name: seq:}.
+        sequences
+          Either an ATGC string or a list of ATGC strings or a dict {name: seq:}.
 
-    blast_db
-      The BLAST database.
+        blast_db
+          The BLAST database.
 
-    subject
-      Either a path to a fasta (.fa) file or an ATGC string. Subject to blast
-      against.
+        subject
+          Either a path to a fasta (.fa) file or an ATGC string. Subject to blast
+          against.
 
-    word_size
-      Word size to use in the blast.
+        word_size
+          Word size to use in the blast.
 
-    perc_identity
-      Minimal percentage of identical nucleotides in a match for it to be kept.
+        perc_identity
+          Minimal percentage of identical nucleotides in a match for it to be kept.
 
-    num_alignments
-      Number of alignments to keep
-.
-    num_threads
-      Number of threads for the BLAST.
+        num_alignments
+          Number of alignments to keep
+    .
+        num_threads
+          Number of threads for the BLAST.
 
-    use_megablast
-      Whether to use Megablast.
+        use_megablast
+          Whether to use Megablast.
 
-    evalue
-      The BLAST E-value parameter.
+        evalue
+          The BLAST E-value parameter.
 
-    ungapped
-      No-gaps matches only?
+        ungapped
+          No-gaps matches only?
 
 
-    Examples
-    --------
+        Examples
+        --------
 
-    >>> blast_record = blast_sequence("ATTGTGCGTGTGTGCGT", "blastdb/ecoli")
-    >>> for alignment in blast_record.alignments:
-    >>>     for hit in alignment.hsps:
-    >>>         print (hit.identities)
+        >>> blast_record = blast_sequence("ATTGTGCGTGTGTGCGT", "blastdb/ecoli")
+        >>> for alignment in blast_record.alignments:
+        >>>     for hit in alignment.hsps:
+        >>>         print (hit.identities)
     """
 
     if isinstance(sequences, str):
@@ -114,7 +115,7 @@ def blast_sequences(
     xml_file, xml_name = tempfile.mkstemp(".xml")
     fasta_file, fasta_name = tempfile.mkstemp(".fa")
     with open(fasta_name, "w+") as f:
-        for (name, seq) in sequences.items():
+        for name, seq in sequences.items():
             f.write(">%s\n%s\n" % (name, seq))
 
     remove_subject = True
@@ -131,7 +132,7 @@ def blast_sequences(
         if isinstance(subject, dict):
             subject_file, fasta_subject_name = tempfile.mkstemp(".fa")
             with open(fasta_subject_name, "w+") as f:
-                for (name, seq) in subject.items():
+                for name, seq in subject.items():
                     f.write(">%s\n%s\n" % (name, seq))
             subject = fasta_subject_name
     else:
