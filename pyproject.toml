@@ -1,6 +1,6 @@
 [project]
 name = "primavera"
-version = "0.1.12"
+version = "0.1.14"
 license = "MIT"
 authors = [{ name = "Zulko" }]
 description = "Primer selection + data analysis for DNA assembly validation."
