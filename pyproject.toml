@@ -1,0 +1,30 @@
+[project]
+name = "primavera"
+version = "0.1.11"
+license = "MIT"
+authors = [{ name = "Zulko" }]
+description = "Primer selection + data analysis for DNA assembly validation."
+readme = "pypi-readme.rst"
+keywords = ["DNA", "assembly", "sequencing", "primer", "design"]
+dependencies = [
+  "numpy",
+  "Biopython",
+  "proglog",
+  "flametree",
+  "pandas",
+  "dna_features_viewer",
+  "dnachisel",
+]
+
+[project.urls]
+Homepage = "https://github.com/Edinburgh-Genome-Foundry/Primavera"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["docs"]
