@@ -64,9 +64,10 @@ You can install Primavera through PIP:
 
     pip install primavera
 
-You will also need to install the NCBI-BLAST+ software. for instance on Ubuntu:
+You will also need to install the NCBI-BLAST+ software. For instance on Ubuntu:
 
 .. code:: shell
+
     apt-get install ncbi-blast+
 
 
