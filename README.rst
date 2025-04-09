@@ -18,6 +18,7 @@ Primavera is a Python library to plan and analyze primer-based verification of D
 
 You can see a live-demo for primer selection `on EGF CUBA: Select Primers <http://cuba.genomefoundry.org/select_primers>`_.
 
+
 Usage
 -----
 
@@ -52,7 +53,6 @@ The returned ``selected_primers`` contains a list of lists of primers (one list 
    :width: 600px
 
 
-
 Installation
 ------------
 
@@ -62,21 +62,16 @@ You can install Primavera through PIP:
 
     pip install primavera
 
-Alternatively, you can unzip the sources in a folder and type:
-
-.. code::
-
-    python setup.py install
-
 You will also need to install the NCBI-BLAST+ software. for instance on Ubuntu:
 
 .. code:: shell
     apt-get install ncbi-blast+
 
+
 License = MIT
 -------------
 
-Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (Copyright 2017 Edinburgh Genome Foundry). Everyone is welcome to contribute!
+Primavera is an open-source software originally written at the `Edinburgh Genome Foundry <http://edinburgh-genome-foundry.github.io/home.html>`_ by `Zulko <https://github.com/Zulko>`_ and `released on Github <https://github.com/Edinburgh-Genome-Foundry/Primavera>`_ under the MIT licence (Copyright 2017 Edinburgh Genome Foundry, University of Edinburgh). Everyone is welcome to contribute!
 
 More biology software
 ---------------------

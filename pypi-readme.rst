@@ -44,19 +44,15 @@ Infos
 
     pip install primavera
 
-**Web documentation:**
+**Web documentation:** `<https://edinburgh-genome-foundry.github.io/Primavera/>`_
 
-`<https://edinburgh-genome-foundry.github.io/Primavera/>`_
+**Github page:** `<https://github.com/Edinburgh-Genome-Foundry/Primavera>`_
 
-**Github Page:**
+**Live demo:** `<http://cuba.genomefoundry.org/select_primers>`_
 
-`<https://github.com/Edinburgh-Genome-Foundry/Primavera>`_
+**License:** MIT
 
-**Live demo:**
-
-`<http://cuba.genomefoundry.org/select_primers>`_
-
-**License:** MIT, Copyright Edinburgh Genome Foundry
+Copyright 2017 Edinburgh Genome Foundry, University of Edinburgh
 
 
 More biology software
